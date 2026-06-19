@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Bootcamp: Zero to Working Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #eceae4;
+    --surface2: #e2e0d9;
+    --border: #d0cdc4;
+    --accent: #2a6b3c;
+    --accent2: #1a5c8a;
+    --accent3: #c0450e;
+    --text: #1c1b18;
+    --muted: #7a7060;
+    --code-bg: #e8e5de;
+    --day1: #1a7a5e;
+    --day2: #7a6200;
+    --day3: #c0450e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(245,243,238,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 52px;
+    overflow-x: auto;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+    margin-right: 24px;
+    flex-shrink: 0;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--surface2); }
+  .nav-links a.d1 { color: var(--day1); }
+  .nav-links a.d2 { color: var(--day2); }
+  .nav-links a.d3 { color: var(--day3); }
+
+  /* HERO */
+  .hero {
+    padding: 80px 24px 60px;
+    max-width: 760px;
+    margin: 0 auto;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(36px, 7vw, 60px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .pill.accent { border-color: var(--accent); color: var(--accent); }
+
+  /* SETUP SECTION */
+  .section {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 64px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* DAY CARDS */
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding: 28px 32px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .day-header.d1 { border-left: 3px solid var(--day1); }
+  .day-header.d2 { border-left: 3px solid var(--day2); }
+  .day-header.d3 { border-left: 3px solid var(--day3); }
+
+  .day-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .d1 .day-number { color: var(--day1); }
+  .d2 .day-number { color: var(--day2); }
+  .d3 .day-number { color: var(--day3); }
+
+  .day-title {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* CONTENT BLOCKS */
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 40px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent2);
+    margin: 24px 0 8px;
+    letter-spacing: 0.01em;
+  }
+  p { margin-bottom: 16px; color: var(--text); }
+  p:last-child { margin-bottom: 0; }
+
+  strong { color: var(--text); font-weight: 500; }
+  em { color: var(--muted); }
+
+  ul, ol {
+    margin: 12px 0 16px 20px;
+  }
+  li { margin-bottom: 6px; }
+
+  /* CODE */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    position: relative;
+  }
+  pre code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c8c4bc;
+  }
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent2);
+  }
+  pre code { background: none; padding: 0; color: #3a3630; }
+
+  .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
+  /* ASCII DIAGRAMS */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 16px 0 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--muted);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .diagram .highlight { color: var(--accent2); }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface); }
+
+  /* CALLOUTS */
+  .callout {
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 16px 0 24px;
+    border: 1px solid;
+    font-size: 15px;
+  }
+  .callout.info {
+    background: rgba(90,255,212,0.05);
+    border-color: rgba(90,255,212,0.2);
+    color: var(--text);
+  }
+  .callout.warn {
+    background: rgba(232,255,90,0.05);
+    border-color: rgba(232,255,90,0.2);
+  }
+  .callout-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--accent2);
+  }
+  .callout.warn .callout-label { color: var(--day2); }
+
+  /* CHECKLIST */
+  .checklist {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0 24px;
+  }
+  .checklist-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .check-item.done .check-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .check-item.done .check-box::after {
+    content: '✓';
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .check-item.done .check-text {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .check-text { font-size: 14px; }
+
+  /* QUOTE / INTERVIEW PREP */
+  .quote-block {
+    border-left: 2px solid var(--accent3);
+    padding: 4px 0 4px 20px;
+    margin: 12px 0;
+  }
+  .quote-block p {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .quote-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    letter-spacing: 0.08em;
+  }
+
+  /* QUICK REF */
+  .ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  @media (max-width: 600px) { .ref-grid { grid-template-columns: 1fr; } }
+  .ref-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .ref-card h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .ref-card ul { margin: 0; padding: 0; list-style: none; }
+  .ref-card li { font-size: 14px; padding: 4px 0; color: var(--text); }
+  .ref-card li::before { content: '→ '; color: var(--muted); }
+
+  /* LINKS */
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* FOOTER */
+  footer {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SYNTAX HIGHLIGHTING APPROXIMATION */
+  .kw { color: #7c1fa0; }
+  .fn { color: #1a5c8a; }
+  .str { color: #2a6b3c; }
+  .cm { color: #9a8f7a; font-style: italic; }
+  .num { color: #c0450e; }
+  .var { color: #1c1b18; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">RAG_BOOTCAMP /</span>
+  <div class="nav-links">
+    <a href="#setup">Setup</a>
+    <a href="#day1" class="d1">Day 1</a>
+    <a href="#day2" class="d2">Day 2</a>
+    <a href="#day3" class="d3">Day 3</a>
+    <a href="#quickref">Quick Ref</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <p class="hero-eyebrow">3-Day Intensive</p>
+  <h1>RAG Bootcamp<br><em>Zero to Working Pipeline</em></h1>
+  <div class="hero-meta">
+    <span class="pill accent">OpenAI + LangChain</span>
+    <span class="pill">ChromaDB</span>
+    <span class="pill">Python</span>
+    <span class="pill">3 days</span>
+  </div>
+  <p style="color: var(--muted); font-size: 15px;">Build a working, demoable RAG pipeline from scratch — foundations, retrieval, evaluation, and agentic architecture.</p>
+</div>
+
+<!-- SETUP -->
+<section class="section" id="setup">
+  <p class="section-label">Before You Start</p>
+
+  <h2>Setup</h2>
+  <p>Run this once before Day 1:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code>mkdir rag-bootcamp && cd rag-bootcamp
+python -m venv venv
+source venv/bin/activate  <span class="cm"># Mac/Linux</span>
+pip install langchain langchain-openai langchain-community \
+            chromadb python-dotenv tiktoken pypdf</code></pre>
+
+  <p>Create a <code>.env</code> file in the project root:</p>
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code>OPENAI_API_KEY=your_key_here</code></pre>
+
+  <p>Create your project structure:</p>
+  <pre><code>rag-bootcamp/
+├── .env
+├── data/           <span class="cm">← your documents go here</span>
+├── day1.py
+├── day2.py
+└── day3.py</code></pre>
+
+  <div class="callout info">
+    <p class="callout-label">Dataset</p>
+    <p>Grab 2–3 PDF articles on any topic — Wikipedia exports, research papers, anything. The richer the document, the more interesting your retrieval will be. Put them in <code>/data</code>.</p>
+  </div>
+</section>
+
+<!-- DAY 1 -->
+<section class="section" id="day1">
+  <div class="day-header d1">
+    <span class="day-number">Day 01</span>
+    <span class="day-title">Foundations</span>
+  </div>
+
+  <h2>1.1 What is RAG and Why Does It Exist?</h2>
+  <p>An LLM is a generalist. It was trained on internet text up to a cutoff date. It knows a lot about the world, but it doesn't know your documents, recent events, or private domain-specific data.</p>
+  <p><strong>The naive solution:</strong> put everything in the prompt. <strong>The problem:</strong> context windows are finite. You can't paste 10,000 pages into a prompt. And even if you could, the model buries the needle in the haystack.</p>
+  <p><strong>RAG (Retrieval-Augmented Generation)</strong> splits the problem: before the query, process and index your documents. At query time, retrieve only the relevant parts, then generate an answer.</p>
+
+  <div class="callout info">
+    <p class="callout-label">Mental model</p>
+    <p>Instead of handing a student the entire library before asking a question, you give them a librarian who pulls the right 3 pages.</p>
+  </div>
+
+  <h2>1.2 The Pipeline Anatomy</h2>
+  <p>Every RAG system has two phases:</p>
+
+  <div class="diagram"><span class="highlight">INGESTION PHASE</span>  (offline, run once)
+
+Raw Documents
+     ↓
+   Load
+     ↓
+   Chunk
+     ↓
+   Embed
+     ↓
+Vector Store
+
+<span class="highlight">QUERY PHASE</span>  (online, every request)
+
+User Query
+     ↓
+  Embed Query
+     ↓
+  Retrieve (similarity search)
+     ↓
+  Stuff into Prompt
+     ↓
+  Generate Answer
+     ↓
+  Response</div>
+
+  <h2>1.3 Key Concepts</h2>
+
+  <h3>Embeddings</h3>
+  <p>An embedding is a list of numbers (a vector) that represents the <em>meaning</em> of a piece of text.</p>
+  <pre><code>"The dog ran fast"        → [0.2, -0.8, 0.4, ...]
+"The canine sprinted quickly" → [0.21, -0.79, 0.41, ...]</code></pre>
+  <p>These sentences have similar vectors because they mean similar things. OpenAI's <code>text-embedding-3-small</code> produces 1536-dimensional vectors. Key idea: <strong>similar meaning = similar vector = close in space.</strong></p>
+
+  <h3>Vector Stores</h3>
+  <p>A database optimized for storing and searching vectors. Instead of <code>WHERE name = 'John'</code>, you ask "give me the 5 vectors closest to this query vector." We'll use <strong>ChromaDB</strong> — runs locally, no setup needed.</p>
+
+  <h3>Cosine Similarity</h3>
+  <p>The metric used to measure how "close" two vectors are. Score of 1 = identical meaning. Score of 0 = unrelated. ChromaDB handles this automatically.</p>
+
+  <h3>Chunking</h3>
+  <p>You can't embed a 50-page document as one vector. You split it into chunks (~500 characters each) with some overlap so context isn't lost at boundaries.</p>
+
+  <h2>1.4 Day 1 Build: Ingest a Document</h2>
+  <p>Save this as <code>day1.py</code>:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">from</span> <span class="var">langchain_community.document_loaders</span> <span class="kw">import</span> <span class="fn">PyPDFLoader</span>
+<span class="kw">from</span> <span class="var">langchain.text_splitter</span> <span class="kw">import</span> <span class="fn">RecursiveCharacterTextSplitter</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>
+<span class="kw">from</span> <span class="var">langchain_community.vectorstores</span> <span class="kw">import</span> <span class="fn">Chroma</span>
+
+<span class="fn">load_dotenv</span>()
+
+<span class="cm"># --- Step 1: Load your document ---</span>
+<span class="var">loader</span> = <span class="fn">PyPDFLoader</span>(<span class="str">"data/your_document.pdf"</span>)
+<span class="var">documents</span> = <span class="var">loader</span>.<span class="fn">load</span>()
+<span class="fn">print</span>(<span class="str">f"Loaded {len(documents)} pages"</span>)
+
+<span class="cm"># --- Step 2: Chunk it ---</span>
+<span class="var">splitter</span> = <span class="fn">RecursiveCharacterTextSplitter</span>(
+    <span class="var">chunk_size</span>=<span class="num">500</span>,
+    <span class="var">chunk_overlap</span>=<span class="num">50</span>
+)
+<span class="var">chunks</span> = <span class="var">splitter</span>.<span class="fn">split_documents</span>(<span class="var">documents</span>)
+<span class="fn">print</span>(<span class="str">f"Split into {len(chunks)} chunks"</span>)
+<span class="fn">print</span>(<span class="var">chunks</span>[<span class="num">0</span>].<span class="var">page_content</span>)
+
+<span class="cm"># --- Step 3: Embed and store ---</span>
+<span class="var">embeddings</span> = <span class="fn">OpenAIEmbeddings</span>(<span class="var">model</span>=<span class="str">"text-embedding-3-small"</span>)
+<span class="var">vectorstore</span> = <span class="fn">Chroma</span>.<span class="fn">from_documents</span>(
+    <span class="var">documents</span>=<span class="var">chunks</span>,
+    <span class="var">embedding</span>=<span class="var">embeddings</span>,
+    <span class="var">persist_directory</span>=<span class="str">"./chroma_db"</span>
+)
+<span class="fn">print</span>(<span class="str">"Vector store created and saved."</span>)
+
+<span class="cm"># --- Step 4: Sanity check ---</span>
+<span class="var">query</span> = <span class="str">"What is this document about?"</span>
+<span class="var">results</span> = <span class="var">vectorstore</span>.<span class="fn">similarity_search</span>(<span class="var">query</span>, <span class="var">k</span>=<span class="num">3</span>)
+<span class="kw">for</span> <span class="var">i</span>, <span class="var">doc</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">results</span>):
+    <span class="fn">print</span>(<span class="str">f"[{i+1}] {doc.page_content[:200]}..."</span>)</code></pre>
+
+  <div class="callout warn">
+    <p class="callout-label">What to observe</p>
+    <p>How many chunks your document produced. Whether the top 3 results seem relevant. The sample chunk — does the splitting make sense?</p>
+  </div>
+
+  <hr class="divider">
+  <h2>Day 1 Checkpoint</h2>
+
+  <div class="checklist">
+    <p class="checklist-title">Understand</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Why RAG exists — context window + domain knowledge problem</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The two phases: ingestion and querying</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">What embeddings are conceptually</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">What chunking does and why overlap matters</span></div>
+  </div>
+
+  <div class="checklist">
+    <p class="checklist-title">Built</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Working virtual environment with all libraries installed</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Vector store saved to ./chroma_db</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Seen real similarity search results</span></div>
+  </div>
+</section>
+
+<!-- DAY 2 -->
+<section class="section" id="day2">
+  <div class="day-header d2">
+    <span class="day-number">Day 02</span>
+    <span class="day-title">Making It Work</span>
+  </div>
+
+  <h2>2.1 Why Naive RAG Fails</h2>
+  <p>You now have a working retrieval system. But naive RAG breaks in predictable ways:</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>#</th><th>Problem</th><th>What happens</th></tr>
+    <tr><td>1</td><td><strong>Bad chunking</strong></td><td>Chunk cuts mid-concept → noisy embedding → wrong retrieval</td></tr>
+    <tr><td>2</td><td><strong>Vocabulary mismatch</strong></td><td>User says "remote work," doc says "work from home" → miss</td></tr>
+    <tr><td>3</td><td><strong>Top-k noise</strong></td><td>5 retrieved chunks, 3 are wrong → model hallucinates</td></tr>
+    <tr><td>4</td><td><strong>Lost in the middle</strong></td><td>LLMs focus on start/end → relevant chunk 6 of 10 gets missed</td></tr>
+  </table>
+  </div>
+
+  <h2>2.2 Reranking</h2>
+  <p>After retrieving top-k chunks, a <strong>reranker</strong> scores each against the query more precisely and reorders them. Slower but more accurate.</p>
+
+  <div class="diagram">Retrieve top 10  (fast, approximate)
+     ↓
+Rerank top 10 → get true top 3  (slower, precise)
+     ↓
+Pass top 3 to LLM</div>
+
+  <h2>2.3 Query Decomposition</h2>
+  <p>Some questions are compound: <em>"What did the company earn in Q3, and how does that compare to Q2?"</em> — this is two questions. Naive RAG treats it as one and retrieves a mixed bag. <strong>Query decomposition</strong> splits it into sub-queries, retrieves for each, then synthesizes.</p>
+
+  <h2>2.4 Evaluation: How Do You Know Your RAG Is Good?</h2>
+  <p>Anyone can build a RAG pipeline. Knowing if it's <em>working</em> is the hard part — and the thing Jubin's team actually cares about.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Metric</th><th>Question it answers</th><th>How</th></tr>
+    <tr><td>Retrieval precision</td><td>Are the retrieved chunks relevant?</td><td>Human review or LLM-as-judge</td></tr>
+    <tr><td>Answer faithfulness</td><td>Does the answer stick to retrieved context?</td><td>LLM-as-judge</td></tr>
+    <tr><td>Answer relevance</td><td>Does the answer address the question?</td><td>LLM-as-judge</td></tr>
+  </table>
+  </div>
+
+  <h2>2.5 Day 2 Build: Full Pipeline with Eval</h2>
+  <p>Save as <code>day2.py</code>:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">from</span> <span class="var">langchain_community.vectorstores</span> <span class="kw">import</span> <span class="fn">Chroma</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>, <span class="fn">ChatOpenAI</span>
+<span class="kw">from</span> <span class="var">langchain.chains</span> <span class="kw">import</span> <span class="fn">RetrievalQA</span>
+<span class="kw">from</span> <span class="var">langchain.prompts</span> <span class="kw">import</span> <span class="fn">PromptTemplate</span>
+
+<span class="fn">load_dotenv</span>()
+
+<span class="cm"># --- Load existing vector store ---</span>
+<span class="var">embeddings</span> = <span class="fn">OpenAIEmbeddings</span>(<span class="var">model</span>=<span class="str">"text-embedding-3-small"</span>)
+<span class="var">vectorstore</span> = <span class="fn">Chroma</span>(
+    <span class="var">persist_directory</span>=<span class="str">"./chroma_db"</span>,
+    <span class="var">embedding_function</span>=<span class="var">embeddings</span>
+)
+<span class="var">retriever</span> = <span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(
+    <span class="var">search_type</span>=<span class="str">"similarity"</span>,
+    <span class="var">search_kwargs</span>={<span class="str">"k"</span>: <span class="num">4</span>}
+)
+
+<span class="cm"># --- Custom prompt (forces grounding) ---</span>
+<span class="var">template</span> = <span class="str">"""You are a helpful assistant. Use ONLY the context below to answer.
+If the answer is not in the context, say "I don't have enough information."
+
+Context:
+{context}
+
+Question: {question}
+Answer:"""</span>
+
+<span class="var">prompt</span> = <span class="fn">PromptTemplate</span>(
+    <span class="var">template</span>=<span class="var">template</span>,
+    <span class="var">input_variables</span>=[<span class="str">"context"</span>, <span class="str">"question"</span>]
+)
+
+<span class="var">llm</span> = <span class="fn">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-4o-mini"</span>, <span class="var">temperature</span>=<span class="num">0</span>)
+<span class="var">qa_chain</span> = <span class="fn">RetrievalQA</span>.<span class="fn">from_chain_type</span>(
+    <span class="var">llm</span>=<span class="var">llm</span>, <span class="var">chain_type</span>=<span class="str">"stuff"</span>, <span class="var">retriever</span>=<span class="var">retriever</span>,
+    <span class="var">chain_type_kwargs</span>={<span class="str">"prompt"</span>: <span class="var">prompt</span>},
+    <span class="var">return_source_documents</span>=<span class="kw">True</span>
+)
+
+<span class="kw">def</span> <span class="fn">ask</span>(<span class="var">question</span>):
+    <span class="var">result</span> = <span class="var">qa_chain</span>.<span class="fn">invoke</span>({<span class="str">"query"</span>: <span class="var">question</span>})
+    <span class="fn">print</span>(<span class="str">f"A: {result['result']}"</span>)
+    <span class="kw">return</span> <span class="var">result</span>
+
+<span class="var">result</span> = <span class="fn">ask</span>(<span class="str">"YOUR QUESTION HERE"</span>)
+
+<span class="cm"># --- LLM-as-judge eval ---</span>
+<span class="kw">def</span> <span class="fn">evaluate_answer</span>(<span class="var">question</span>, <span class="var">context</span>, <span class="var">answer</span>):
+    <span class="var">judge</span> = <span class="fn">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-4o-mini"</span>, <span class="var">temperature</span>=<span class="num">0</span>)
+    <span class="var">prompt</span> = <span class="str">f"""Score this RAG answer:
+1. Faithfulness (1-5): Does it only use info from context?
+2. Relevance (1-5): Does it address the question?
+
+Question: {question}
+Context: {context}
+Answer: {answer}
+
+Format: Faithfulness: X/5 - reason\nRelevance: X/5 - reason"""</span>
+    <span class="kw">return</span> <span class="var">judge</span>.<span class="fn">invoke</span>(<span class="var">prompt</span>).<span class="var">content</span>
+
+<span class="var">ctx</span> = <span class="str">"\n"</span>.<span class="fn">join</span>([<span class="var">d</span>.<span class="var">page_content</span> <span class="kw">for</span> <span class="var">d</span> <span class="kw">in</span> <span class="var">result</span>[<span class="str">'source_documents'</span>]])
+<span class="fn">print</span>(<span class="fn">evaluate_answer</span>(<span class="str">"YOUR QUESTION"</span>, <span class="var">ctx</span>, <span class="var">result</span>[<span class="str">'result'</span>]))</code></pre>
+
+  <hr class="divider">
+  <h2>Day 2 Checkpoint</h2>
+  <div class="checklist">
+    <p class="checklist-title">Understand</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The 4 ways naive RAG fails</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">What reranking is and when you'd add it</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">What query decomposition solves</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The 3 eval metrics: faithfulness, relevance, retrieval precision</span></div>
+  </div>
+  <div class="checklist">
+    <p class="checklist-title">Built</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Working end-to-end RAG pipeline (retrieve + generate)</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">LLM refuses to answer out-of-context questions</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Run at least one eval and seen the scores</span></div>
+  </div>
+</section>
+
+<!-- DAY 3 -->
+<section class="section" id="day3">
+  <div class="day-header d3">
+    <span class="day-number">Day 03</span>
+    <span class="day-title">Architecture + Production</span>
+  </div>
+
+  <h2>3.1 Agentic RAG</h2>
+  <p>Classic RAG is a fixed pipeline: query → retrieve → generate. The LLM has no control. <strong>Agentic RAG</strong> gives the LLM agency over the retrieval process:</p>
+
+  <div class="diagram">User Query
+     ↓
+<span class="highlight">Agent decides:</span> do I need to retrieve? what query to use?
+     ↓
+Retrieves (possibly multiple times)
+     ↓
+<span class="highlight">Agent decides:</span> is this enough? should I refine the query?
+     ↓
+Generates final answer</div>
+
+  <p>The agent can decide whether retrieval is needed, rewrite the query if the first retrieval fails, retrieve from multiple sources, or use tools beyond retrieval. This is where the field is moving — and why Jubin's team needs an FDE who can wire this correctly for each client.</p>
+
+  <h2>3.2 Architecture Tradeoffs</h2>
+  <p>When proposing an architecture to a client, these are the decisions you're making:</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Decision</th><th>Options</th><th>Tradeoff</th></tr>
+    <tr><td>Chunk size</td><td>Small (200) vs Large (1000 tokens)</td><td>Small = precise, may lose context. Large = more context, noisier</td></tr>
+    <tr><td>Retrieval</td><td>Dense vs Sparse (BM25) vs Hybrid</td><td>Dense = semantic. Sparse = exact keyword. Hybrid = best of both</td></tr>
+    <tr><td>Top-k</td><td>3 vs 10</td><td>More context but more noise and higher cost</td></tr>
+    <tr><td>Reranking</td><td>Yes vs No</td><td>Better precision, adds latency and cost</td></tr>
+    <tr><td>Embedding model</td><td>OpenAI vs OSS (BGE, E5)</td><td>OpenAI = easy, costs per call. OSS = free, requires hosting</td></tr>
+    <tr><td>Generation model</td><td>GPT-4o vs GPT-4o-mini</td><td>Better quality vs lower cost/latency</td></tr>
+  </table>
+  </div>
+
+  <div class="callout info">
+    <p class="callout-label">Key insight</p>
+    <p>For precision-sensitive domains like research or legal, bias toward smaller chunks, hybrid retrieval, and reranking even at higher cost. For high-volume consumer use cases, optimize for latency and cost first.</p>
+  </div>
+
+  <h2>3.3 The Components Your Friend Mentioned</h2>
+
+  <h3>Query Decomposer</h3>
+  <p>Breaks compound questions into sub-queries. Important when documents are structured around specific topics and a single query might span multiple.</p>
+
+  <h3>Re-ranker</h3>
+  <p>A cross-encoder model that re-scores retrieved chunks against the query. Common choices: Cohere Rerank API, or open source <code>cross-encoder/ms-marco-MiniLM-L-6-v2</code> from HuggingFace.</p>
+
+  <h3>Retrieval Types</h3>
+  <ul>
+    <li><strong>Dense:</strong> Vector similarity (what we built)</li>
+    <li><strong>Sparse:</strong> BM25 — like a smart grep with TF-IDF scoring</li>
+    <li><strong>Hybrid:</strong> Run both, merge results. Best for most production cases</li>
+  </ul>
+
+  <h3>Metadata Filtering</h3>
+  <p>Filter by metadata (date, document type, department) before vector search. Narrows the search space and improves precision — often the biggest win in real deployments.</p>
+
+  <h2>3.4 Day 3 Build: Agentic Pipeline (Your Demo)</h2>
+  <p>Save as <code>day3.py</code>. This is your demo artifact:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">from</span> <span class="var">langchain_community.vectorstores</span> <span class="kw">import</span> <span class="fn">Chroma</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>, <span class="fn">ChatOpenAI</span>
+<span class="kw">from</span> <span class="var">langchain.agents</span> <span class="kw">import</span> <span class="fn">AgentExecutor</span>, <span class="fn">create_react_agent</span>
+<span class="kw">from</span> <span class="var">langchain.tools.retriever</span> <span class="kw">import</span> <span class="fn">create_retriever_tool</span>
+<span class="kw">from</span> <span class="var">langchain</span> <span class="kw">import</span> <span class="var">hub</span>
+
+<span class="fn">load_dotenv</span>()
+
+<span class="var">embeddings</span> = <span class="fn">OpenAIEmbeddings</span>(<span class="var">model</span>=<span class="str">"text-embedding-3-small"</span>)
+<span class="var">vectorstore</span> = <span class="fn">Chroma</span>(
+    <span class="var">persist_directory</span>=<span class="str">"./chroma_db"</span>,
+    <span class="var">embedding_function</span>=<span class="var">embeddings</span>
+)
+<span class="var">retriever</span> = <span class="var">vectorstore</span>.<span class="fn">as_retriever</span>(<span class="var">search_kwargs</span>={<span class="str">"k"</span>: <span class="num">4</span>})
+
+<span class="cm"># --- Wrap retriever as a tool the agent can call ---</span>
+<span class="var">retriever_tool</span> = <span class="fn">create_retriever_tool</span>(
+    <span class="var">retriever</span>,
+    <span class="var">name</span>=<span class="str">"document_search"</span>,
+    <span class="var">description</span>=<span class="str">"Search the document knowledge base. Use when answering questions about the documents."</span>
+)
+
+<span class="var">llm</span> = <span class="fn">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-4o-mini"</span>, <span class="var">temperature</span>=<span class="num">0</span>)
+<span class="var">prompt</span> = <span class="var">hub</span>.<span class="fn">pull</span>(<span class="str">"hwchase17/react"</span>)
+
+<span class="var">agent</span> = <span class="fn">create_react_agent</span>(<span class="var">llm</span>, [<span class="var">retriever_tool</span>], <span class="var">prompt</span>)
+<span class="var">agent_executor</span> = <span class="fn">AgentExecutor</span>(
+    <span class="var">agent</span>=<span class="var">agent</span>,
+    <span class="var">tools</span>=[<span class="var">retriever_tool</span>],
+    <span class="var">verbose</span>=<span class="kw">True</span>,  <span class="cm"># shows agent reasoning — keep this on for the demo</span>
+    <span class="var">handle_parsing_errors</span>=<span class="kw">True</span>
+)
+
+<span class="fn">print</span>(<span class="str">"RAG Agent ready. Type 'quit' to exit.\n"</span>)
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="var">question</span> = <span class="fn">input</span>(<span class="str">"You: "</span>).<span class="fn">strip</span>()
+    <span class="kw">if</span> <span class="var">question</span>.<span class="fn">lower</span>() == <span class="str">'quit'</span>: <span class="kw">break</span>
+    <span class="kw">if</span> <span class="kw">not</span> <span class="var">question</span>: <span class="kw">continue</span>
+    <span class="var">result</span> = <span class="var">agent_executor</span>.<span class="fn">invoke</span>({<span class="str">"input"</span>: <span class="var">question</span>})
+    <span class="fn">print</span>(<span class="str">f"\nAgent: {result['output']}\n"</span>)
+    <span class="fn">print</span>(<span class="str">"-" * 50</span>)</code></pre>
+
+  <div class="callout warn">
+    <p class="callout-label">Demo tip</p>
+    <p><code>verbose=True</code> shows the agent's reasoning chain. This is your demo narrative: "here you can see the agent deciding to search, running the query, evaluating the result, then generating." Leave it on.</p>
+  </div>
+
+  <h2>3.5 What to Say in the Interview</h2>
+
+  <div class="quote-block">
+    <p>"The hardest part isn't generation — it's retrieval precision. You can have the best LLM in the world but if you're retrieving noisy chunks, the answer degrades. Most of the engineering work is in chunking strategy, embedding model selection, and hybrid retrieval."</p>
+    <span class="quote-label">On the retrieval problem</span>
+  </div>
+  <div class="quote-block">
+    <p>"Classic RAG is a fixed pipeline. Agentic RAG gives the model control over when and how to retrieve — it can decompose queries, retry with refined queries, or decide retrieval isn't needed at all. That's where most production systems are heading."</p>
+    <span class="quote-label">On agentic RAG</span>
+  </div>
+  <div class="quote-block">
+    <p>"You can't improve what you don't measure. We need faithfulness — does the answer stay grounded in retrieved context — and relevance — does it actually answer the question. LLM-as-judge is a practical way to run evals at scale."</p>
+    <span class="quote-label">On evaluation</span>
+  </div>
+  <div class="quote-block">
+    <p>"The tradeoffs depend entirely on the use case. For precision-sensitive domains like research or legal, I'd bias toward smaller chunks, hybrid retrieval, and reranking even at higher cost. For high-volume consumer use cases, I'd optimize for latency and cost first."</p>
+    <span class="quote-label">On client work</span>
+  </div>
+
+  <hr class="divider">
+  <h2>Day 3 Checkpoint</h2>
+  <div class="checklist">
+    <p class="checklist-title">Understand</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">What makes agentic RAG different from classic RAG</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The key architecture decisions and their tradeoffs</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The 4 components: query decomposer, reranker, hybrid retrieval, metadata filtering</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">How to talk about tradeoffs in a client conversation</span></div>
+  </div>
+  <div class="checklist">
+    <p class="checklist-title">Built</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Working agentic RAG pipeline with interactive querying</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Seen agent reasoning steps with verbose=True</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Can walk someone through the demo in 10 minutes</span></div>
+  </div>
+</section>
+
+<!-- QUICK REF -->
+<section class="section" id="quickref">
+  <p class="section-label">Quick Reference</p>
+  <h2>Everything in one place</h2>
+
+  <h3>The pipeline</h3>
+  <div class="diagram">INGESTION (once)
+PDF/Text → Load → Chunk (500 tokens, 50 overlap) → Embed → ChromaDB
+
+QUERY (every request)
+Question → Embed → Similarity Search → Top-k Chunks → Prompt + Context → LLM → Answer</div>
+
+  <div class="ref-grid">
+    <div class="ref-card">
+      <h4>Failure Modes</h4>
+      <ul>
+        <li>Bad chunking → noisy embeddings</li>
+        <li>Vocab mismatch → use hybrid retrieval</li>
+        <li>Too many chunks → add reranker</li>
+        <li>Compound questions → add query decomposer</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>Eval Metrics</h4>
+      <ul>
+        <li>Faithfulness: answer uses only context</li>
+        <li>Relevance: answer addresses the question</li>
+        <li>Retrieval precision: chunks are relevant</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>Components</h4>
+      <ul>
+        <li>Query decomposer</li>
+        <li>Re-ranker (cross-encoder)</li>
+        <li>Hybrid retrieval (dense + BM25)</li>
+        <li>Metadata filtering</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>Suggested Reads</h4>
+      <ul>
+        <li><a href="https://contextual.ai/blog" target="_blank">contextual.ai/blog</a></li>
+        <li><a href="https://python.langchain.com/docs/tutorials/rag/" target="_blank">LangChain RAG tutorial</a></li>
+        <li>RAGAS paper (arxiv)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>RAG Bootcamp — 3 days to a working pipeline</span>
+  <span>Stack: Python · LangChain · ChromaDB · OpenAI</span>
+</footer>
+
+<script>
+  function toggleCheck(el) {
+    el.classList.toggle('done');
+  }
+
+  function copyCode(btn) {
+    const pre = btn.parentElement;
+    const code = pre.querySelector('code');
+    // Get text content without HTML tags
+    const text = code.innerText || code.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // Stagger section animations on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animationDelay = '0.05s';
+        e.target.style.animationPlayState = 'running';
+      }
+    });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.section').forEach(s => {
+    s.style.animationPlayState = 'paused';
+    observer.observe(s);
+  });
+</script>
+</body>
+</html>

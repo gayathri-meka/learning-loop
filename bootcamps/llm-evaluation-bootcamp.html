@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Evaluation Bootcamp: From &ldquo;Looks Good&rdquo; to a Production Gate</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #eceae4;
+    --surface2: #e2e0d9;
+    --border: #d0cdc4;
+    --rule: #cbc6b9;
+    --text: #1c1b18;
+    --muted: #7a7060;
+    --faint: #9b9384;
+    --code-bg: #e8e5de;
+    --code-text: #2a2722;
+    --accent: #2a6b3c;
+    --day1: #1a7a5e;
+    --day2: #7a6200;
+    --day3: #c0450e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation: none !important; transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(245,243,238,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 52px; overflow-x: auto; }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-logo { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; color: var(--accent); white-space: nowrap; margin-right: 22px; flex-shrink: 0; font-weight: 600; }
+  .nav-links { display: flex; gap: 1px; flex-shrink: 0; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 4px; white-space: nowrap; transition: color 0.15s, background 0.15s; }
+  .nav-links a:hover { color: var(--text); background: var(--surface2); }
+  .nav-links a:focus-visible { outline: 2px solid var(--day1); outline-offset: 2px; }
+  .nav-links a.d1 { color: var(--day1); } .nav-links a.d2 { color: var(--day2); } .nav-links a.d3 { color: var(--day3); }
+
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 28px; }
+
+  /* hero */
+  header.hero { padding: 72px 0 50px; border-bottom: 1px solid var(--rule); }
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--faint); margin-bottom: 26px; font-weight: 500; }
+  .eyebrow b { color: var(--accent); font-weight: 600; }
+  h1.title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(38px, 7vw, 66px); line-height: 1.04; letter-spacing: -0.02em; margin-bottom: 26px; color: #2a2722; }
+  .deck { font-family: 'Fraunces', serif; font-weight: 300; font-style: italic; font-size: clamp(19px, 3vw, 23px); line-height: 1.5; color: var(--muted); max-width: 640px; margin-bottom: 30px; }
+  .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 5px 13px; }
+
+  /* program overview */
+  .program { padding: 46px 0 10px; }
+  .program-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .day-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: var(--surface); text-decoration: none; color: inherit; display: block; transition: transform 0.15s, box-shadow 0.15s; }
+  .day-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40,35,25,0.08); }
+  .day-card .dnum { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 8px; }
+  .day-card.c1 .dnum { color: var(--day1); } .day-card.c2 .dnum { color: var(--day2); } .day-card.c3 .dnum { color: var(--day3); }
+  .day-card h3 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 20px; line-height: 1.12; margin-bottom: 8px; color: #2a2722; }
+  .day-card p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 680px) { .program-grid { grid-template-columns: 1fr; } }
+
+  /* setup */
+  .setup { padding: 40px 0 10px; }
+  .h-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 12px; }
+  h2.sec-title { font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(26px, 4vw, 34px); line-height: 1.1; letter-spacing: -0.01em; margin-bottom: 18px; color: #2a2722; }
+
+  /* day divider */
+  .day-divider { margin: 64px 0 0; padding: 40px 0 36px; border-radius: 16px; color: #f5f3ee; position: relative; overflow: hidden; }
+  .day-divider.d1 { background: linear-gradient(135deg, #145a45, #1a7a5e); }
+  .day-divider.d2 { background: linear-gradient(135deg, #5c4a00, #7a6200); }
+  .day-divider.d3 { background: linear-gradient(135deg, #963509, #c0450e); }
+  .day-divider .wrap { position: relative; z-index: 2; }
+  .day-divider .dd-num { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.82; margin-bottom: 14px; }
+  .day-divider h2 { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(32px, 5.5vw, 48px); line-height: 1.04; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .day-divider p { font-size: 16px; max-width: 600px; opacity: 0.92; line-height: 1.6; }
+  .day-divider .ghost { position: absolute; font-family: 'Fraunces', serif; font-size: 280px; font-weight: 300; opacity: 0.07; right: -10px; top: -70px; line-height: 1; z-index: 1; }
+
+  /* section / concept */
+  .section { padding: 38px 0 0; }
+  .section p { margin-bottom: 18px; }
+  .section p .lead { font-variant: small-caps; letter-spacing: 0.03em; font-weight: 600; color: #2a2722; }
+  strong { font-weight: 600; color: #2a2722; }
+  em { font-style: italic; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.85em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; color: var(--code-text); }
+
+  /* mental model callout */
+  .mental { border-radius: 12px; padding: 22px 24px; margin: 26px 0; border: 1px solid var(--border); background: var(--surface); border-left: 4px solid var(--accent); }
+  .mental.d1 { border-left-color: var(--day1); } .mental.d2 { border-left-color: var(--day2); } .mental.d3 { border-left-color: var(--day3); }
+  .mental .k { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; margin-bottom: 9px; }
+  .mental.d1 .k { color: var(--day1); } .mental.d2 .k { color: var(--day2); } .mental.d3 .k { color: var(--day3); }
+  .mental p { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; font-size: 21px; line-height: 1.42; color: #2a2722; margin: 0; }
+
+  /* diagram */
+  .diagram { background: #211e1a; border-radius: 12px; padding: 22px 24px; margin: 26px 0; overflow-x: auto; }
+  .diagram pre { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.55; color: #d8d3c7; white-space: pre; }
+  .diagram .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8a8275; margin-top: 12px; letter-spacing: 0.04em; }
+  .diagram .g1 { color: #6fd3a8; } .diagram .g2 { color: #e0c068; } .diagram .g3 { color: #f0996a; } .diagram .gm { color: #9b9384; }
+
+  /* concept cards */
+  .concepts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 26px 0; }
+  .ccard { border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; background: var(--surface); }
+  .ccard .badge { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 11px; }
+  .ccard h4 { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 16px; margin-bottom: 6px; color: #2a2722; }
+  .ccard p { font-size: 14.5px; color: var(--muted); line-height: 1.5; margin: 0; }
+  .b1 { background: var(--day1); } .b2 { background: var(--day2); } .b3 { background: var(--day3); }
+  @media (max-width: 680px) { .concepts { grid-template-columns: 1fr; } }
+
+  /* build / code */
+  .build { margin: 30px 0; }
+  .build-tag { display: inline-flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 12px; }
+  .build-tag .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .build.d1 .build-tag { color: var(--day1); } .build.d1 .dot { background: var(--day1); }
+  .build.d2 .build-tag { color: var(--day2); } .build.d2 .dot { background: var(--day2); }
+  .build.d3 .build-tag { color: var(--day3); } .build.d3 .dot { background: var(--day3); }
+  .codeblock { background: #211e1a; border-radius: 12px; overflow: hidden; }
+  .codeblock .bar { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; border-bottom: 1px solid #34302a; }
+  .codeblock .fname { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #8a8275; }
+  .copy-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8a8275; background: transparent; border: 1px solid #3a352e; border-radius: 5px; padding: 3px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+  .copy-btn:hover { color: #d8d3c7; border-color: #5a544a; }
+  .copy-btn.copied { color: #6fd3a8; border-color: #6fd3a8; }
+  .codeblock pre { padding: 18px 20px; overflow-x: auto; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6; color: #d8d3c7; }
+  .codeblock .cm { color: #7d8a6f; } .codeblock .ck { color: #d08770; } .codeblock .cs { color: #a3be8c; } .codeblock .cf { color: #88c0d0; } .codeblock .cn { color: #ebcb8b; }
+
+  /* observe note */
+  .observe { border: 1px dashed var(--border); border-radius: 10px; padding: 16px 20px; margin: 18px 0 0; background: rgba(236,234,228,0.5); }
+  .observe .k { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 7px; }
+  .observe p { font-size: 14.5px; color: var(--muted); margin: 0; line-height: 1.55; }
+
+  /* checkpoint */
+  .checkpoint { margin: 34px 0 8px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .checkpoint .cp-head { padding: 16px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: #fff; }
+  .checkpoint.d1 .cp-head { background: var(--day1); } .checkpoint.d2 .cp-head { background: var(--day2); } .checkpoint.d3 .cp-head { background: var(--day3); }
+  .cp-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .cp-col { padding: 20px 22px; }
+  .cp-col:first-child { border-right: 1px solid var(--border); }
+  .cp-col h5 { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-bottom: 12px; font-weight: 600; }
+  .cp-item { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; font-size: 14.5px; color: var(--muted); line-height: 1.45; }
+  .cp-box { width: 17px; height: 17px; border: 1.5px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 2px; position: relative; transition: background 0.15s, border-color 0.15s; }
+  .cp-item.done .cp-box { background: var(--accent); border-color: var(--accent); }
+  .checkpoint.d1 .cp-item.done .cp-box { background: var(--day1); border-color: var(--day1); }
+  .checkpoint.d2 .cp-item.done .cp-box { background: var(--day2); border-color: var(--day2); }
+  .checkpoint.d3 .cp-item.done .cp-box { background: var(--day3); border-color: var(--day3); }
+  .cp-item.done .cp-box::after { content: '\2713'; color: #fff; font-size: 12px; position: absolute; top: -1px; left: 2px; }
+  .cp-item.done { color: var(--text); }
+  @media (max-width: 680px) { .cp-body { grid-template-columns: 1fr; } .cp-col:first-child { border-right: none; border-bottom: 1px solid var(--border); } }
+
+  hr.div-rule { border: none; border-top: 1px solid var(--rule); margin: 40px 0 0; }
+
+  /* interview prep */
+  .interview { padding: 50px 0 10px; }
+  .iv-card { border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin-bottom: 14px; background: var(--surface); }
+  .iv-q { font-family: 'Fraunces', serif; font-weight: 400; font-size: 19px; color: #2a2722; margin-bottom: 10px; line-height: 1.3; }
+  .iv-q::before { content: 'Q'; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); margin-right: 10px; font-weight: 600; vertical-align: 2px; }
+  .iv-a { font-size: 15px; color: var(--muted); line-height: 1.6; }
+  .iv-a strong { color: #2a2722; }
+
+  /* quick reference */
+  .quickref { padding: 50px 0 10px; }
+  .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+  .qr-box { border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; background: var(--surface); }
+  .qr-box h4 { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; font-weight: 600; color: var(--accent); }
+  .qr-box ul { list-style: none; }
+  .qr-box li { font-size: 14px; line-height: 1.5; padding: 6px 0 6px 0; border-top: 1px solid var(--border); color: var(--muted); }
+  .qr-box li:first-child { border-top: none; }
+  .qr-box li b { color: #2a2722; font-weight: 600; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; }
+  @media (max-width: 680px) { .qr-grid { grid-template-columns: 1fr; } }
+
+  footer.foot { padding: 50px 0 70px; margin-top: 46px; border-top: 1px solid var(--rule); font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--faint); line-height: 1.7; }
+  footer.foot b { color: var(--muted); font-weight: 500; }
+
+  .reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">AI FOUNDATIONS // BOOTCAMP</span>
+  <div class="nav-links">
+    <a href="#program">Program</a>
+    <a href="#setup">Setup</a>
+    <a class="d1" href="#day1">Day 1 · Mindset</a>
+    <a class="d2" href="#day2">Day 2 · The Judge</a>
+    <a class="d3" href="#day3">Day 3 · The Gate</a>
+    <a href="#interview">Interview</a>
+    <a href="#quickref">Quick Ref</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">No. 05 — AI Foundations &nbsp;·&nbsp; <b>LLM Evaluation</b></div>
+    <h1 class="title">From &ldquo;looks good&rdquo;<br>to a production gate</h1>
+    <p class="deck">Anyone can eyeball ten outputs and call it a day. The skill that separates a demo from a system is turning &ldquo;it seems fine&rdquo; into a number you can defend, regress against, and block a deploy on. This is that skill.</p>
+    <div class="meta-chips">
+      <span class="chip">3 days</span>
+      <span class="chip">concept → build → checkpoint</span>
+      <span class="chip">grounded in Pulse &amp; SensAI</span>
+      <span class="chip">PM / SA depth</span>
+    </div>
+  </div>
+</header>
+
+<section class="program" id="program">
+  <div class="wrap">
+    <div class="h-eyebrow">The program</div>
+    <h2 class="sec-title">Three days, one through-line: make quality measurable</h2>
+    <p style="color:var(--muted); max-width:640px;">Each day moves one step from intuition toward infrastructure. You'll start by scoring outputs with dumb-but-reliable assertions, graduate to an LLM that grades other LLMs, and finish with an eval suite that actually gates a deploy — the thing teams mean when they say &ldquo;eval-driven development.&rdquo;</p>
+    <div class="program-grid">
+      <a class="day-card c1" href="#day1">
+        <div class="dnum">DAY 01</div>
+        <h3>The Eval Mindset</h3>
+        <p>Why &ldquo;it looks good&rdquo; doesn't scale. Golden datasets, the three scorer types, and the three places evals run.</p>
+      </a>
+      <a class="day-card c2" href="#day2">
+        <div class="dnum">DAY 02</div>
+        <h3>The Judge</h3>
+        <p>LLM-as-judge: rubrics, pairwise vs single-answer, and the biases that quietly wreck your numbers.</p>
+      </a>
+      <a class="day-card c3" href="#day3">
+        <div class="dnum">DAY 03</div>
+        <h3>The Gate</h3>
+        <p>Eval suites in CI, RAG and agent metrics, online eval, and shipping the eval before the feature.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="setup" id="setup">
+  <div class="wrap">
+    <div class="h-eyebrow">Setup</div>
+    <h2 class="sec-title">What you need</h2>
+    <p style="color:var(--muted); max-width:640px; margin-bottom:6px;">The code is illustrative pseudo-Python — the patterns transfer to whichever eval framework you adopt (DeepEval, Braintrust, LangSmith, Promptfoo, RAGAS, OpenAI Evals, Inspect). Two reference systems run through every example:</p>
+    <div class="concepts" style="margin-top:22px;">
+      <div class="ccard">
+        <span class="badge b1">P</span>
+        <h4>Pulse</h4>
+        <p>The placement-tracking bot — a RAG system over candidate and role data. Our stand-in for &ldquo;does the retrieved answer actually hold up?&rdquo;</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b2">S</span>
+        <h4>SensAI</h4>
+        <p>The edtech tutor — free-text explanations to learners. Our stand-in for &ldquo;is this answer correct <em>and</em> clear?&rdquo;</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DAY 1 ============================== -->
+<div class="day-divider d1" id="day1">
+  <span class="ghost">01</span>
+  <div class="wrap">
+    <div class="dd-num">Day 01 — Foundations</div>
+    <h2>The eval mindset</h2>
+    <p>Before any tooling: why evaluating an LLM is unlike testing normal software, and the small set of ideas that make quality measurable at all.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="wrap">
+    <h2 class="sec-title">The problem with &ldquo;it looks good&rdquo;</h2>
+    <p>Normal software is deterministic: same input, same output, and a test that passed yesterday passes today. LLM systems break both halves of that promise. The same prompt can return different text on each call, and a model or prompt change that fixes one case can silently regress ten others you weren't watching. &ldquo;I tried a few examples and they looked good&rdquo; is how every team starts — and it stops working the moment you have more than a handful of cases or more than one person editing prompts.</p>
+    <p>There's a second trap: <strong>quality is not one number.</strong> An answer can be factually correct but rude, fluent but unfaithful to its sources, helpful but leaking PII. A single &ldquo;goodness&rdquo; score hides exactly the failure you care about. The job of evaluation is to make these dimensions explicit and countable.</p>
+
+    <div class="mental d1">
+      <div class="k">Mental model</div>
+      <p>Evals are unit tests for non-deterministic systems. You can't assert <span class="mono">output == expected</span> — so you assert that it <em>scores</em> above a bar, on dimensions you chose in advance.</p>
+    </div>
+
+    <h2 class="sec-title" style="margin-top:42px;">The shape of every eval</h2>
+    <p>Strip away the frameworks and every evaluation is the same five-step loop. Internalize it once and every tool you touch becomes a variation on this.</p>
+
+    <div class="diagram">
+<pre><span class="g1">  ┌──────────────┐     ┌──────────┐     ┌───────────┐     ┌────────────┐     ┌──────────┐</span>
+<span class="g1">  │  1. DATASET  │ ──▶ │  2. RUN  │ ──▶ │ 3. SCORE  │ ──▶ │ 4.AGGREGATE│ ──▶ │ 5.DECIDE │</span>
+<span class="g1">  └──────────────┘     └──────────┘     └───────────┘     └────────────┘     └──────────┘</span>
+   golden inputs        your system      a scorer per      mean / pass-rate    ship? block?
+   (+ refs/rubrics)      under test       quality dim       per dimension       investigate?
+       <span class="gm">▲</span>                                                                          <span class="gm">│</span>
+       <span class="gm">└──────────────────────  failures feed back into the dataset  ◀───────────────┘</span></pre>
+      <div class="cap">The eval loop. Step 3 is where the design lives — the rest is plumbing.</div>
+    </div>
+
+    <p>That loop runs in <strong>three different places</strong>, and conflating them is a classic mistake. <span class="lead">Offline</span> evals run against a curated dataset on your laptop or in a notebook — fast iteration. <span class="lead">CI</span> evals run the same suite automatically before a prompt or model change merges — the gate. <span class="lead">Online</span> evals run against a sample of real production traffic — catching drift the curated set never anticipated. You want all three; each catches what the others miss.</p>
+
+    <h2 class="sec-title" style="margin-top:42px;">Three kinds of scorer</h2>
+    <p>Step 3 — scoring — comes in exactly three flavors, in increasing order of power and cost. Most of the craft of evaluation is knowing which to reach for.</p>
+
+    <div class="concepts">
+      <div class="ccard">
+        <span class="badge b1">1</span>
+        <h4>Deterministic</h4>
+        <p>Code-based checks: exact match, &ldquo;contains&rdquo;, regex, JSON-schema validity, latency under N ms. Cheap, fast, zero ambiguity — but only works when there's a checkable right answer.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b2">2</span>
+        <h4>Model-graded (rubric)</h4>
+        <p>An LLM judge scores against criteria you define — correctness, faithfulness, tone. Handles free text where there's no single right answer. The whole of Day 2.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b3">3</span>
+        <h4>Human</h4>
+        <p>The ground truth everything else is calibrated against. Expensive and slow, so you spend it deliberately — usually to label a few hundred examples that anchor your automated scorers.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b1">★</span>
+        <h4>Leaderboards ≠ your app</h4>
+        <p>Public benchmarks (MMLU, LMArena) measure a bare model with a generic prompt. They tell you almost nothing about <em>your</em> system on <em>your</em> data. Build your own eval set.</p>
+      </div>
+    </div>
+
+    <div class="build d1">
+      <div class="build-tag"><span class="dot"></span> Build · a first eval harness</div>
+      <p style="color:var(--muted); margin-bottom:0;">Start where every eval should: a tiny golden dataset and deterministic scorers. We'll evaluate Pulse on questions that <em>do</em> have checkable answers.</p>
+      <div class="codeblock" style="margin-top:14px;">
+        <div class="bar"><span class="fname">eval_pulse_v0.py</span><button class="copy-btn">copy</button></div>
+<pre><span class="cm"># A golden dataset: inputs + what a correct answer must contain.</span>
+golden = [
+  {<span class="cs">"q"</span>: <span class="cs">"Which candidates are placed at Acme?"</span>,
+   <span class="cs">"must_contain"</span>: [<span class="cs">"Priya"</span>, <span class="cs">"Marcus"</span>], <span class="cs">"must_be_json"</span>: <span class="ck">True</span>},
+  {<span class="cs">"q"</span>: <span class="cs">"How many open roles at Byte Corp?"</span>,
+   <span class="cs">"must_contain"</span>: [<span class="cs">"3"</span>], <span class="cs">"must_be_json"</span>: <span class="ck">False</span>},
+]
+
+<span class="ck">def</span> <span class="cf">score</span>(case, output):
+  results = {}
+  <span class="cm"># Deterministic scorer 1: required facts present</span>
+  results[<span class="cs">"contains"</span>] = <span class="cf">all</span>(s <span class="ck">in</span> output <span class="ck">for</span> s <span class="ck">in</span> case[<span class="cs">"must_contain"</span>])
+  <span class="cm"># Deterministic scorer 2: structural validity</span>
+  <span class="ck">if</span> case[<span class="cs">"must_be_json"</span>]:
+    results[<span class="cs">"valid_json"</span>] = <span class="cf">is_valid_json</span>(output)
+  <span class="ck">return</span> results
+
+<span class="cm"># Run + aggregate</span>
+rows = [<span class="cf">score</span>(c, <span class="cf">pulse</span>(c[<span class="cs">"q"</span>])) <span class="ck">for</span> c <span class="ck">in</span> golden]
+pass_rate = <span class="cf">mean</span>([<span class="cf">all</span>(r.values()) <span class="ck">for</span> r <span class="ck">in</span> rows])
+<span class="cf">print</span>(<span class="cs">f"pass rate: {pass_rate:.0%}"</span>)  <span class="cm"># your first defensible number</span>
+</pre>
+      </div>
+      <div class="observe">
+        <div class="k">What to observe</div>
+        <p>Run it against a free-text question — &ldquo;summarize Priya's placement history&rdquo; — and watch <span class="mono">must_contain</span> fail on a perfectly good answer that happens to phrase things differently. That brittleness is the wall every team hits, and it's exactly what Day 2 exists to solve.</p>
+      </div>
+    </div>
+
+    <div class="checkpoint d1">
+      <div class="cp-head">Day 1 · Checkpoint</div>
+      <div class="cp-body">
+        <div class="cp-col">
+          <h5>You understand</h5>
+          <div class="cp-item"><span class="cp-box"></span> Why non-determinism and regression make eyeballing fail</div>
+          <div class="cp-item"><span class="cp-box"></span> The five-step eval loop, and that scoring is where the design lives</div>
+          <div class="cp-item"><span class="cp-box"></span> Offline vs CI vs online — and what each one catches</div>
+          <div class="cp-item"><span class="cp-box"></span> The three scorer types and when each applies</div>
+        </div>
+        <div class="cp-col">
+          <h5>You've built</h5>
+          <div class="cp-item"><span class="cp-box"></span> A golden dataset with inputs + acceptance criteria</div>
+          <div class="cp-item"><span class="cp-box"></span> Deterministic scorers (contains, JSON-valid)</div>
+          <div class="cp-item"><span class="cp-box"></span> A run-and-aggregate loop producing a pass rate</div>
+          <div class="cp-item"><span class="cp-box"></span> Seen exact-match break on free text</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============================== DAY 2 ============================== -->
+<div class="day-divider d2" id="day2">
+  <span class="ghost">02</span>
+  <div class="wrap">
+    <div class="dd-num">Day 02 — Automation</div>
+    <h2>The judge</h2>
+    <p>When there's no single right answer, you grade with another model. This is the workhorse of modern evaluation — and the one most teams get subtly wrong.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="wrap">
+    <h2 class="sec-title">Letting a model grade a model</h2>
+    <p>Day 1's deterministic scorers fall apart on free text — a SensAI tutoring explanation has a thousand valid phrasings. The breakthrough idea, now standard, is <strong>LLM-as-judge</strong>: prompt a strong model with your criteria and have it score the output. The bet is empirical and it mostly holds — on many tasks a well-built judge agrees with human reviewers roughly <strong>85%</strong> of the time, which is often higher than two humans agree with <em>each other</em>. That's good enough to run at a scale no human panel could touch.</p>
+    <p>But a judge is a model too. It is non-deterministic, it can be wrong, and — critically — it has <strong>systematic biases</strong> that inflate or distort your numbers if you don't design around them. The single biggest mistake in evaluation is trusting a judge you never validated.</p>
+
+    <div class="mental d2">
+      <div class="k">Mental model</div>
+      <p>The judge is part of your system under test. Before it grades your app, you have to grade the judge — against humans, on your data.</p>
+    </div>
+
+    <h2 class="sec-title" style="margin-top:42px;">Three ways to ask the question</h2>
+    <p>How you frame the judging task changes its reliability. There are three standard modes.</p>
+
+    <div class="diagram">
+<pre><span class="g2">  SINGLE-ANSWER GRADING        PAIRWISE COMPARISON          REFERENCE-BASED</span>
+  ┌───────────────────┐        ┌───────────────────┐        ┌───────────────────┐
+  │  output + rubric  │        │  output A vs B    │        │  output + gold ref│
+  │        ▼          │        │        ▼          │        │        ▼          │
+  │   score 1–5       │        │  which is better? │        │  matches ref?     │
+  └───────────────────┘        └───────────────────┘        └───────────────────┘
+  <span class="gm">absolute, scalable;</span>          <span class="gm">most reliable for</span>           <span class="gm">strongest signal, but</span>
+  <span class="gm">scores can drift</span>             <span class="gm">"did B regress?"</span>            <span class="gm">needs a gold answer</span></pre>
+      <div class="cap">Reference-free (left two) scales without gold answers; reference-based is most precise when you have them.</div>
+    </div>
+
+    <h2 class="sec-title" style="margin-top:42px;">The judge's biases — and the fixes</h2>
+    <p>These aren't edge cases; they're measured, repeatable, and large enough to flip conclusions. Know them by name.</p>
+
+    <div class="concepts">
+      <div class="ccard">
+        <span class="badge b2">1</span>
+        <h4>Position bias</h4>
+        <p>In pairwise mode, judges favor whichever answer is shown first — often ~60% of the time. Swapping the two can flip the verdict in ~40% of pairs. <strong>Fix:</strong> run both orders, average.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b2">2</span>
+        <h4>Verbosity / length bias</h4>
+        <p>Longer answers get scored higher regardless of quality. <strong>Fix:</strong> say so in the rubric, cap length, or normalize for it.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b2">3</span>
+        <h4>Self-preference</h4>
+        <p>A judge tends to favor outputs from its own model family. <strong>Fix:</strong> judge with a different model than the one under test where you can.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b2">4</span>
+        <h4>Sycophancy / agreeableness</h4>
+        <p>Judges over-accept plausible-looking output without scrutiny. <strong>Fix:</strong> force chain-of-thought reasoning <em>before</em> the score, and demand evidence.</p>
+      </div>
+    </div>
+
+    <p>Two practices neutralize most of this. First, <strong>make the judge reason before it scores</strong> (the &ldquo;G-Eval&rdquo; pattern): a rubric plus step-by-step justification beats a bare number. Second, <strong>calibrate against humans</strong>: hand-label at least ~100 examples, then check that your judge correlates with them before you trust a single automated run. An uncalibrated judge is a confident random number generator.</p>
+
+    <div class="build d2">
+      <div class="build-tag"><span class="dot"></span> Build · an LLM judge with a rubric</div>
+      <p style="color:var(--muted); margin-bottom:0;">Grade SensAI tutoring answers on two dimensions, with reasoning-before-score and a position-swap helper for pairwise mode.</p>
+      <div class="codeblock" style="margin-top:14px;">
+        <div class="bar"><span class="fname">judge_sensai.py</span><button class="copy-btn">copy</button></div>
+<pre><span class="cm"># Reasoning-before-score rubric (the G-Eval pattern)</span>
+JUDGE_PROMPT = <span class="cs">"""You are grading a tutoring answer for a learner.
+Criteria:
+  - correctness: is the explanation factually right?
+  - clarity: would a beginner follow it?
+First reason step by step about each criterion.
+THEN output JSON: {"correctness": 1-5, "clarity": 1-5, "why": "..."}"""</span>
+
+<span class="ck">def</span> <span class="cf">judge</span>(question, answer, judge_model=<span class="cs">"a-different-model"</span>):
+  msg = <span class="cs">f"{JUDGE_PROMPT}\n\nQ: {question}\nANSWER: {answer}"</span>
+  <span class="ck">return</span> <span class="cf">parse_json</span>(<span class="cf">llm</span>(judge_model, msg))   <span class="cm"># {"correctness":4,"clarity":5,...}</span>
+
+<span class="cm"># Pairwise with position-swap to cancel position bias</span>
+<span class="ck">def</span> <span class="cf">pairwise</span>(q, a, b):
+  v1 = <span class="cf">judge_pair</span>(q, a, b)        <span class="cm"># A first</span>
+  v2 = <span class="cf">judge_pair</span>(q, b, a)        <span class="cm"># B first</span>
+  <span class="ck">return</span> <span class="cs">"tie"</span> <span class="ck">if</span> v1 != <span class="cf">flip</span>(v2) <span class="ck">else</span> v1   <span class="cm"># disagreement on swap = tie</span>
+
+<span class="cm"># ALWAYS validate the judge before trusting it</span>
+agreement = <span class="cf">correlate</span>(<span class="cf">judge_all</span>(human_labeled), human_scores)
+<span class="ck">assert</span> agreement &gt; <span class="cn">0.8</span>, <span class="cs">"judge not calibrated — do not ship on this number"</span>
+</pre>
+      </div>
+      <div class="observe">
+        <div class="k">What to observe</div>
+        <p>Run <span class="mono">pairwise</span> without the swap and you'll see a confident winner. Add the swap and a chunk of those &ldquo;wins&rdquo; turn into ties — that's position bias you were about to ship as signal. Then feed the judge a padded, waffly answer and watch verbosity bias inflate the score.</p>
+      </div>
+    </div>
+
+    <div class="checkpoint d2">
+      <div class="cp-head">Day 2 · Checkpoint</div>
+      <div class="cp-body">
+        <div class="cp-col">
+          <h5>You understand</h5>
+          <div class="cp-item"><span class="cp-box"></span> Why LLM-as-judge works, and the ~85% agreement bet</div>
+          <div class="cp-item"><span class="cp-box"></span> Single-answer vs pairwise vs reference-based</div>
+          <div class="cp-item"><span class="cp-box"></span> The four judge biases by name, and their fixes</div>
+          <div class="cp-item"><span class="cp-box"></span> Why you calibrate a judge against humans before trusting it</div>
+        </div>
+        <div class="cp-col">
+          <h5>You've built</h5>
+          <div class="cp-item"><span class="cp-box"></span> A reasoning-before-score rubric judge</div>
+          <div class="cp-item"><span class="cp-box"></span> A position-swap helper for pairwise</div>
+          <div class="cp-item"><span class="cp-box"></span> A calibration check against human labels</div>
+          <div class="cp-item"><span class="cp-box"></span> Watched position &amp; verbosity bias move your scores</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DAY 3 ============================== -->
+<div class="day-divider d3" id="day3">
+  <span class="ghost">03</span>
+  <div class="wrap">
+    <div class="dd-num">Day 03 — Production</div>
+    <h2>The gate</h2>
+    <p>An eval that lives in a notebook changes nothing. The payoff is an eval that runs in CI, blocks a bad deploy, and watches live traffic — plus the metrics specific to RAG and agents.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="wrap">
+    <h2 class="sec-title">Eval-driven development</h2>
+    <p>The mindset shift that makes all of this pay off: <strong>write the eval before the feature.</strong> The eval set <em>is</em> the spec — it states, in checkable form, what &ldquo;working&rdquo; means. Then the same suite runs automatically in CI, and a prompt or model change that drops a metric below its bar simply doesn't merge. Quality stops being a vibe and becomes a gate, the same way tests gate normal code.</p>
+
+    <div class="mental d3">
+      <div class="k">Mental model</div>
+      <p>Ship the eval before the feature. If you can't write a test that tells you it's working, you don't yet know what &ldquo;working&rdquo; means.</p>
+    </div>
+
+    <div class="diagram">
+<pre><span class="g3">   author change          CI GATE                       PRODUCTION
+   ┌────────────┐      ┌──────────────┐               ┌──────────────────┐</span>
+<span class="g3">   │ new prompt │ ───▶ │ run eval     │ ── pass ────▶ │ deploy           │</span>
+<span class="g3">   │ or model   │      │ suite        │               │      │           │</span>
+<span class="g3">   └────────────┘      └──────┬───────┘               │      ▼           │</span>
+                              <span class="g3">│ fail</span>                    <span class="g3">│ online eval on   │</span>
+                              <span class="g3">▼</span>                         <span class="g3">│ sampled traffic  │</span>
+                       <span class="gm">block the merge</span>             <span class="g3">└────────┬─────────┘</span>
+                                                            <span class="gm">│ surprising failures</span>
+       <span class="gm">└──────────────────  add to golden dataset  ◀───────────┘</span></pre>
+      <div class="cap">Offline iterate → CI gate → online watch → failures feed the dataset. The loop closes.</div>
+    </div>
+
+    <h2 class="sec-title" style="margin-top:42px;">Metrics that fit the system</h2>
+    <p>Generic &ldquo;is it good&rdquo; isn't enough once you're evaluating RAG or agents. Each has purpose-built metrics that pinpoint <em>where</em> it broke.</p>
+
+    <div class="concepts">
+      <div class="ccard">
+        <span class="badge b3">R</span>
+        <h4>RAG · faithfulness</h4>
+        <p>Is every claim in the answer supported by the retrieved context? Catches hallucination even when the answer &ldquo;sounds right.&rdquo; The headline RAG metric for Pulse.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b3">R</span>
+        <h4>RAG · context precision/recall</h4>
+        <p>Did retrieval surface the right chunks (recall) without burying them in junk (precision)? Separates a retrieval bug from a generation bug.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b3">A</span>
+        <h4>Agent · task success + trajectory</h4>
+        <p>Did it reach the goal (success), <em>and</em> take a sound path of tool calls to get there (trajectory accuracy)? A right answer via a broken path is a latent failure.</p>
+      </div>
+      <div class="ccard">
+        <span class="badge b3">A</span>
+        <h4>Agent · pass^k consistency</h4>
+        <p>Run the same task k times. <span class="mono">pass^1</span> is &ldquo;can it&rdquo;; <span class="mono">pass^k</span> is &ldquo;can it reliably.&rdquo; The gap is often 15–25 points — and it's what production actually feels.</p>
+      </div>
+    </div>
+
+    <p>One discipline underpins all of it: <strong>guard the eval set itself.</strong> If your eval examples leak into training or prompt context, your numbers inflate — this is benchmark <em>contamination</em>, and it's why public leaderboard scores are widely inflated by 5–15 points. Keep a held-out set, version it, and report a metric with a confidence interval, not a single hero number.</p>
+
+    <div class="build d3">
+      <div class="build-tag"><span class="dot"></span> Build · an eval suite that gates the deploy</div>
+      <p style="color:var(--muted); margin-bottom:0;">A pytest-style suite for Pulse that asserts faithfulness and consistency. Wire it into CI and a failing metric blocks the merge.</p>
+      <div class="codeblock" style="margin-top:14px;">
+        <div class="bar"><span class="fname">test_pulse_eval.py</span><button class="copy-btn">copy</button></div>
+<pre><span class="cm"># Runs in CI on every prompt/model change. Failing assert = blocked merge.</span>
+THRESHOLDS = {<span class="cs">"faithfulness"</span>: <span class="cn">0.90</span>, <span class="cs">"context_recall"</span>: <span class="cn">0.85</span>}
+
+<span class="ck">def</span> <span class="cf">test_pulse_faithfulness</span>():
+  scores = []
+  <span class="ck">for</span> case <span class="ck">in</span> golden_rag:
+    answer, context = <span class="cf">pulse_with_context</span>(case[<span class="cs">"q"</span>])
+    <span class="cm"># model-graded: every claim must be supported by context</span>
+    scores.append(<span class="cf">faithfulness</span>(answer, context))
+  <span class="ck">assert</span> <span class="cf">mean</span>(scores) &gt;= THRESHOLDS[<span class="cs">"faithfulness"</span>], \
+    <span class="cs">f"faithfulness {mean(scores):.2f} below bar — fix before merge"</span>
+
+<span class="ck">def</span> <span class="cf">test_pulse_consistency</span>():       <span class="cm"># pass^k: capability vs reliability</span>
+  task = <span class="cs">"book a screening for Priya at Acme"</span>
+  oks = [<span class="cf">agent_succeeds</span>(task) <span class="ck">for</span> _ <span class="ck">in</span> <span class="cf">range</span>(<span class="cn">5</span>)]
+  <span class="ck">assert</span> <span class="cf">all</span>(oks), <span class="cs">f"pass^5 failed: {sum(oks)}/5 — flaky in prod"</span>
+</pre>
+      </div>
+      <div class="observe">
+        <div class="k">What to observe</div>
+        <p>Write an answer that's <em>fluent and wrong</em> — confidently citing a placement that isn't in the context — and watch faithfulness catch what a generic &ldquo;quality&rdquo; score would have waved through. Then watch <span class="mono">test_pulse_consistency</span> go red even though the task &ldquo;works&rdquo; when you try it once by hand.</p>
+      </div>
+    </div>
+
+    <div class="checkpoint d3">
+      <div class="cp-head">Day 3 · Checkpoint</div>
+      <div class="cp-body">
+        <div class="cp-col">
+          <h5>You understand</h5>
+          <div class="cp-item"><span class="cp-box"></span> Eval-driven development: the eval is the spec</div>
+          <div class="cp-item"><span class="cp-box"></span> Offline → CI → online, and how the loop closes</div>
+          <div class="cp-item"><span class="cp-box"></span> RAG metrics (faithfulness, context precision/recall)</div>
+          <div class="cp-item"><span class="cp-box"></span> Agent metrics (task success, trajectory, pass^k) &amp; contamination</div>
+        </div>
+        <div class="cp-col">
+          <h5>You've built</h5>
+          <div class="cp-item"><span class="cp-box"></span> A CI suite with thresholds that block merges</div>
+          <div class="cp-item"><span class="cp-box"></span> A faithfulness gate for Pulse RAG</div>
+          <div class="cp-item"><span class="cp-box"></span> A pass^k consistency check</div>
+          <div class="cp-item"><span class="cp-box"></span> Seen a fluent-but-wrong answer get caught</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div-rule">
+
+<!-- ============================== INTERVIEW ============================== -->
+<section class="interview" id="interview">
+  <div class="wrap">
+    <div class="h-eyebrow">Interview prep</div>
+    <h2 class="sec-title">Say it like someone who's shipped evals</h2>
+    <p style="color:var(--muted); max-width:640px; margin-bottom:26px;">The questions that separate &ldquo;read a blog post&rdquo; from &ldquo;ran this in production.&rdquo; Answer with the vocabulary, the trade-off, and a concrete example.</p>
+
+    <div class="iv-card">
+      <div class="iv-q">How would you evaluate an LLM feature where there's no single right answer?</div>
+      <div class="iv-a">Move up the scorer ladder. <strong>Deterministic where I can</strong> (format, required facts), then an <strong>LLM-as-judge with a rubric</strong> for the open-ended quality dimensions, calibrated against ~100 human labels first. I'd score multiple dimensions separately — a single number hides the failure that matters — and report pass-rates with a confidence interval, not one hero score.</div>
+    </div>
+    <div class="iv-card">
+      <div class="iv-q">Your LLM judge says version B is better. Why might you not trust it?</div>
+      <div class="iv-a">Judges have measurable biases. <strong>Position bias</strong> — it may just prefer whichever was shown first — so I'd swap order and re-run; if the verdict flips, it's a tie. Plus <strong>verbosity</strong> and <strong>self-preference</strong> bias. And I'd ask whether the judge was ever calibrated against humans on this task. Until it is, it's a confident guess.</div>
+    </div>
+    <div class="iv-card">
+      <div class="iv-q">A model scores 90% on a benchmark. What does that tell you about production?</div>
+      <div class="iv-a">Less than it looks. Public scores are inflated ~5–15 points by <strong>contamination</strong> and single-run reporting, and they measure a bare model — not my system on my data. <strong>pass^1 isn't pass^k</strong>: 90% capability can be ~70% reliability when real users retry. I'd trust my own held-out eval over any leaderboard.</div>
+    </div>
+    <div class="iv-card">
+      <div class="iv-q">What does &ldquo;eval-driven development&rdquo; mean in practice?</div>
+      <div class="iv-a">The eval is the spec, written first. The suite runs in <strong>CI as a gate</strong> — a prompt or model change that drops a metric below its bar doesn't merge. Then <strong>online eval</strong> on sampled traffic catches drift, and those surprises feed back into the golden dataset. Quality becomes a gate, not a vibe.</div>
+    </div>
+    <div class="iv-card">
+      <div class="iv-q">For a RAG system like ours, which metric do you watch most?</div>
+      <div class="iv-a"><strong>Faithfulness</strong> — is every claim supported by retrieved context — because it catches confident hallucination that a generic quality score waves through. I'd pair it with <strong>context precision/recall</strong> to localize the bug: low recall is a retrieval problem, high recall but low faithfulness is a generation problem.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="div-rule">
+
+<!-- ============================== QUICK REF ============================== -->
+<section class="quickref" id="quickref">
+  <div class="wrap">
+    <div class="h-eyebrow">Quick reference</div>
+    <h2 class="sec-title">The one-page cheat sheet</h2>
+    <div class="qr-grid">
+      <div class="qr-box">
+        <h4>The three scorer types</h4>
+        <ul>
+          <li><b>Deterministic</b> — exact match, contains, regex, JSON-valid, latency. Cheap, zero ambiguity.</li>
+          <li><b>Model-graded</b> — LLM judge + rubric. For free text; calibrate it first.</li>
+          <li><b>Human</b> — the ground truth; spend it to calibrate the other two.</li>
+        </ul>
+      </div>
+      <div class="qr-box">
+        <h4>Where evals run</h4>
+        <ul>
+          <li><b>Offline</b> — curated dataset, fast iteration.</li>
+          <li><b>CI</b> — same suite, gates the merge.</li>
+          <li><b>Online</b> — sampled prod traffic, catches drift.</li>
+        </ul>
+      </div>
+      <div class="qr-box">
+        <h4>Judge bias checklist</h4>
+        <ul>
+          <li><b>Position</b> — swap order, average.</li>
+          <li><b>Verbosity</b> — penalize length in the rubric.</li>
+          <li><b>Self-preference</b> — judge with a different model.</li>
+          <li><b>Sycophancy</b> — reason before scoring; demand evidence.</li>
+        </ul>
+      </div>
+      <div class="qr-box">
+        <h4>System-specific metrics</h4>
+        <ul>
+          <li><b>RAG</b> — faithfulness, context precision/recall, answer relevancy.</li>
+          <li><b>Agent</b> — task success, trajectory accuracy, pass^k.</li>
+          <li><b>Always</b> — multidimensional, CI with confidence intervals.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <b>AI Foundations Bootcamp — No. 05: LLM Evaluation.</b><br>
+    Deliverable #1 · HTML guide. Pairs with the slide deck and the researched story (D2).<br>
+    Concepts current as of mid-2026. Code is illustrative pseudo-Python; patterns transfer across DeepEval, Braintrust, LangSmith, Promptfoo, RAGAS, OpenAI Evals, and Inspect.
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.closest('.codeblock').querySelector('pre').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'copied'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1800);
+      });
+    });
+  });
+  document.querySelectorAll('.cp-item').forEach(item => {
+    item.addEventListener('click', () => item.classList.toggle('done'));
+  });
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const els = document.querySelectorAll('.section > .wrap > *, .program-grid, .qr-grid');
+    els.forEach(e => e.classList.add('reveal'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
+    els.forEach(e => io.observe(e));
+  }
+</script>
+</body>
+</html>

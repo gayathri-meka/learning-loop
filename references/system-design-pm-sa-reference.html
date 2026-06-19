@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design — PM & SA Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #E2DDD4;
+    --text: #1A1814;
+    --text2: #5C584F;
+    --text3: #9C9888;
+    --accent: #1A3A2A;
+    --accent-light: #E8F0EB;
+    --amber: #B85C00;
+    --amber-light: #FDF0E0;
+    --blue: #1A3060;
+    --blue-light: #EAF0FA;
+    --red: #8B1A1A;
+    --red-light: #FAE8E8;
+    --purple: #3D1A60;
+    --purple-light: #F0EAF8;
+    --teal: #0A4A4A;
+    --teal-light: #E4F4F4;
+    --mono: 'DM Mono', monospace;
+    --serif: 'DM Serif Display', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 3rem 2rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .site-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 20%;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+  .header-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: .75rem;
+  }
+  .header-title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: .75rem;
+  }
+  .header-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    max-width: 520px;
+    line-height: 1.7;
+  }
+  .header-pills {
+    display: flex;
+    gap: 8px;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .header-pill {
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* NAV */
+  .nav-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-inner::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    color: var(--text3);
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN */
+  .main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+  /* SECTION */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: .4rem;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: .6rem;
+    max-width: 600px;
+    line-height: 1.7;
+  }
+
+  /* BLOCK CARD */
+  .block-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .block-card:hover { box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+
+  .block-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .block-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 24px;
+    padding-top: 3px;
+  }
+  .block-meta { flex: 1; }
+  .block-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .block-tagline {
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .block-badges {
+    display: flex;
+    gap: 5px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+  .badge-pm { background: var(--amber-light); color: var(--amber); }
+  .badge-sa { background: var(--blue-light); color: var(--blue); }
+  .badge-deep { background: var(--purple-light); color: var(--purple); }
+  .badge-routing { background: var(--teal-light); color: var(--teal); }
+  .badge-storage { background: var(--accent-light); color: var(--accent); }
+  .badge-async { background: var(--purple-light); color: var(--purple); }
+  .badge-ops { background: var(--amber-light); color: var(--amber); }
+
+  .block-chevron {
+    color: var(--text3);
+    font-size: 18px;
+    transition: transform .2s;
+    padding-top: 2px;
+  }
+  .block-card.open .block-chevron { transform: rotate(180deg); }
+
+  .block-body {
+    display: none;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.25rem;
+  }
+  .block-card.open .block-body { display: block; }
+
+  /* BODY GRID */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 600px) { .body-grid { grid-template-columns: 1fr; } }
+
+  .body-cell {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .body-cell.full { grid-column: 1 / -1; }
+  .cell-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: .5rem;
+  }
+  .cell-text {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .cell-text strong { color: var(--text); font-weight: 500; }
+
+  /* CONVO TRIGGERS */
+  .convo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .convo-list li {
+    font-size: 12px;
+    color: var(--text2);
+    padding: 5px 0;
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.55;
+    border-bottom: 1px solid var(--border);
+  }
+  .convo-list li:last-child { border-bottom: none; }
+  .convo-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--text3);
+    font-size: 11px;
+  }
+  .convo-list li em {
+    font-style: normal;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* EXAMPLES */
+  .example-chip {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 2px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    color: var(--text2);
+    margin: 2px 2px 2px 0;
+  }
+
+  /* DEPTH NOTE */
+  .depth-note {
+    background: var(--purple-light);
+    border-left: 3px solid var(--purple);
+    border-radius: 0 6px 6px 0;
+    padding: .65rem 1rem;
+    font-size: 12px;
+    color: var(--purple);
+    margin-top: .75rem;
+    line-height: 1.6;
+  }
+  .depth-note strong { font-weight: 500; }
+
+  /* ===== DATABASE DEEP DIVE ===== */
+  .db-section { margin-bottom: 2rem; }
+  .db-section-title {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: .5rem;
+    margin-top: 1.5rem;
+  }
+  .db-intro {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+    max-width: 680px;
+  }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 1.25rem 0;
+  }
+  @media (max-width: 600px) { .comparison-grid { grid-template-columns: 1fr; } }
+
+  .cmp-card {
+    border-radius: 10px;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+  }
+  .cmp-card.sql { background: linear-gradient(135deg, #F0F8FF 0%, #EAF4FF 100%); border-color: #C5DDF5; }
+  .cmp-card.nosql { background: linear-gradient(135deg, #F4FFF0 0%, #EAF8E4 100%); border-color: #B8E6B0; }
+  .cmp-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .cmp-subtitle { font-size: 12px; color: var(--text3); margin-bottom: 1rem; font-family: var(--mono); }
+  .cmp-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .cmp-row::before { content: '·'; color: var(--text3); flex-shrink: 0; }
+  .cmp-row strong { color: var(--text); font-weight: 500; }
+
+  .decision-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 1rem 0;
+  }
+  .decision-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--surface2);
+    color: var(--text2);
+    font-weight: 500;
+    font-size: 11px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    border-bottom: 1px solid var(--border);
+  }
+  .decision-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .decision-table tr:last-child td { border-bottom: none; }
+  .decision-table td:first-child { font-weight: 500; color: var(--text); }
+  .decision-table td .pick-sql { color: var(--blue); font-weight: 500; font-family: var(--mono); font-size: 11px; }
+  .decision-table td .pick-nosql { color: var(--accent); font-weight: 500; font-family: var(--mono); font-size: 11px; }
+  .decision-table td .pick-either { color: var(--amber); font-weight: 500; font-family: var(--mono); font-size: 11px; }
+
+  .nosql-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 1rem 0;
+  }
+  .nosql-type {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .nosql-type-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .nosql-type-eg {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .nosql-type-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.55;
+  }
+  .nosql-type-use {
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 5px;
+    font-weight: 500;
+  }
+
+  .pm-callout {
+    background: var(--amber-light);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: .85rem 1.1rem;
+    font-size: 13px;
+    color: var(--amber);
+    line-height: 1.65;
+    margin: 1rem 0;
+  }
+  .pm-callout strong { font-weight: 500; }
+
+  .sa-callout {
+    background: var(--blue-light);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: .85rem 1.1rem;
+    font-size: 13px;
+    color: var(--blue);
+    line-height: 1.65;
+    margin: 1rem 0;
+  }
+  .sa-callout strong { font-weight: 500; }
+
+  .replication-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin: 1rem 0;
+  }
+  @media (max-width: 600px) { .replication-grid { grid-template-columns: 1fr; } }
+  .rep-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .9rem 1rem;
+  }
+  .rep-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .rep-desc { font-size: 12px; color: var(--text2); line-height: 1.55; }
+  .rep-use { font-size: 11px; color: var(--text3); margin-top: 5px; font-family: var(--mono); }
+
+  /* FOOTER */
+  .site-footer {
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 3rem;
+  }
+
+  /* SEARCH BAR */
+  .search-wrap {
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 16px 10px 38px;
+    font-family: var(--sans);
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  /* SCROLL TO TOP */
+  .back-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .2s;
+    z-index: 200;
+  }
+  .back-top.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <p class="header-label">System Design Reference · PM & SA Edition</p>
+    <h1 class="header-title">16 Building Blocks<br><em>for people who ship products</em></h1>
+    <p class="header-sub">What each component is, what problem it solves, and when it comes up in real conversations — for Solution Architects and Product Managers.</p>
+    <div class="header-pills">
+      <span class="header-pill">not an engineer's manual</span>
+      <span class="header-pill">decision vocabulary</span>
+      <span class="header-pill">SensAI & Pulse grounded</span>
+    </div>
+  </div>
+</header>
+
+<nav class="nav-bar">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('routing')">Routing & Access</button>
+    <button class="nav-btn" onclick="showSection('storage')">Storage & Data</button>
+    <button class="nav-btn" onclick="showSection('databases')">Databases Deep Dive</button>
+    <button class="nav-btn" onclick="showSection('async')">Async Comms</button>
+    <button class="nav-btn" onclick="showSection('identity')">Identity & Counters</button>
+    <button class="nav-btn" onclick="showSection('discover')">Search & Compute</button>
+    <button class="nav-btn" onclick="showSection('observability')">Observability</button>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- ===================== ROUTING & ACCESS ===================== -->
+<section class="section active" id="section-routing">
+  <div class="section-header">
+    <p class="section-eyebrow">Building blocks 01–04</p>
+    <h2 class="section-title">Routing & Access</h2>
+    <p class="section-desc">The front door of every web system. These components handle how requests find your servers, how traffic is distributed, how content is delivered fast, and how abuse is prevented.</p>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" type="text" placeholder="Search this section…" oninput="filterCards(this.value, 'section-routing')">
+  </div>
+
+  <!-- DNS -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">01</span>
+      <div class="block-meta">
+        <div class="block-name">DNS — Domain Name System</div>
+        <div class="block-tagline">Translates human-readable names into IP addresses</div>
+        <div class="block-badges">
+          <span class="badge badge-routing">routing</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A globally distributed phone book. When a browser visits <strong>sensai.in</strong>, DNS translates that name into an IP address (e.g. 76.76.21.21). Governed by ICANN, operated by a hierarchy: root servers → TLD registries (Verisign owns .com) → registrars (GoDaddy, Namecheap) → your authoritative nameserver (Cloudflare, Vercel).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text">Humans can't memorize IP addresses. Servers change IPs when you migrate hosts. DNS lets you decouple the public name from the underlying infrastructure — change where your server lives without changing what users type.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Key concept: TTL</div>
+          <div class="cell-text"><strong>Time-To-Live</strong> controls how long resolvers cache a record. High TTL (86400s = 1 day) = changes are slow to propagate. Low TTL (300s = 5 min) = changes propagate fast but more lookup traffic. Lower TTL before migrations; raise it after.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Record types</div>
+          <div class="cell-text"><strong>A record:</strong> name → IP address<br><strong>CNAME:</strong> name → another name (e.g. → Vercel)<br><strong>MX:</strong> mail routing<br><strong>TXT:</strong> domain verification, SPF/DKIM for email<br><strong>NS:</strong> which nameservers are authoritative</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up in conversation</div>
+          <ul class="convo-list">
+            <li>Customer wants <em>app.theirdomain.com</em> instead of your default URL → "That's a CNAME record, takes 10 minutes to configure, propagates within the hour."</li>
+            <li>Post-migration: <em>"Why are some users still hitting the old server?"</em> → "Their resolver cached the old TTL. Should clear within [TTL] seconds."</li>
+            <li>Adding a new service: <em>api.sensai.in</em> → a CNAME pointing to your backend. No new domain purchase needed.</li>
+            <li>Incident war room: engineer says <em>"it's a DNS misconfiguration"</em> → you know this means propagation delay, not a code fix, and can set customer expectations accordingly.</li>
+            <li>Enterprise customer asks <em>"can we keep our domain?"</em> → yes, custom domain = DNS record change on their side, 15-minute engineering task.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth-note"><strong>SA depth:</strong> Understand GeoDNS (routing users to nearest region by IP location) and how moving nameservers to Cloudflare gives you DDoS protection + analytics for free, separate from just adding a CNAME.</div>
+    </div>
+  </div>
+
+  <!-- Load Balancer -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">02</span>
+      <div class="block-meta">
+        <div class="block-name">Load Balancer</div>
+        <div class="block-tagline">Distributes incoming traffic across multiple servers</div>
+        <div class="block-badges">
+          <span class="badge badge-routing">routing</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A server that sits in front of your application servers and decides which one handles each incoming request. Think: maître d' at a restaurant with many tables, routing each party to an available one. Without it, all traffic hits one server until it falls over.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text"><strong>Single point of failure:</strong> if one server dies, traffic routes to healthy ones.<br><strong>Capacity:</strong> spread 100K req/sec across 20 servers instead of crushing one.<br><strong>Zero-downtime deploys:</strong> update servers one at a time while the LB keeps traffic flowing.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">L4 vs L7 (important for SAs)</div>
+          <div class="cell-text"><strong>L4 (transport):</strong> routes by IP/port only. Fast, dumb. Doesn't see request content.<br><strong>L7 (application):</strong> routes by URL path, headers, cookies. <em>sensai.in/api/*</em> → API servers. <em>/static/*</em> → CDN. <em>/ws/*</em> → WebSocket servers. This is what you'd configure in practice.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Algorithms</div>
+          <div class="cell-text"><strong>Round robin:</strong> 1→2→3→1→2→3. Simple.<br><strong>Least connections:</strong> next request → least busy server. Smarter.<br><strong>Consistent hashing:</strong> same user always hits same server (critical for stateful services, distributed caches).</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up in conversation</div>
+          <ul class="convo-list">
+            <li>Customer asks <em>"how do you ensure uptime if a server goes down?"</em> → Load balancer with health checks removes unhealthy servers automatically.</li>
+            <li>Capacity planning: <em>"can you handle 10× traffic?"</em> → Add servers behind the LB; it distributes load automatically. Horizontal scaling.</li>
+            <li>Feature request: <em>"can different customers be on isolated infrastructure?"</em> → LB can route by subdomain or header to dedicated server pools.</li>
+            <li>Engineer mentions <em>"we need sticky sessions"</em> → They mean consistent hashing / session affinity. Relevant if your app stores state in memory (not ideal, but common).</li>
+            <li>Discussing SLAs: LB + health checks is the mechanism behind "we automatically failover in under 30 seconds."</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth-note"><strong>SA depth:</strong> In a three-tier architecture (web → app → DB), you need a load balancer at each tier boundary. The three-LB diagram isn't over-engineering — it's what lets you scale each tier independently. AWS ALB (L7), NLB (L4), and Vercel's edge are all load balancers you'll reference in customer conversations.</div>
+    </div>
+  </div>
+
+  <!-- CDN -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">03</span>
+      <div class="block-meta">
+        <div class="block-name">CDN — Content Delivery Network</div>
+        <div class="block-tagline">Serves content from servers physically close to the user</div>
+        <div class="block-badges">
+          <span class="badge badge-routing">routing</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A global network of servers (Points of Presence / PoPs) that cache copies of your content close to users. Cloudflare has 300+ PoPs globally, many inside ISP facilities. Latency is physical — Mumbai to San Francisco is min 140ms round-trip regardless of server speed. CDN solves this by serving from a nearby PoP (8ms instead of 140ms).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text"><strong>Latency:</strong> physics is the limit — CDN moves data closer.<br><strong>Origin load:</strong> 95% of requests served from edge, origin server barely touched.<br><strong>Cost:</strong> CDN bandwidth is cheaper than origin server bandwidth at scale.<br><strong>Availability:</strong> if origin goes down, CDN can serve stale cache.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What gets cached vs not</div>
+          <div class="cell-text"><strong>Cache (forever):</strong> JS bundles, CSS, fonts, images with versioned filenames.<br><strong>Cache (short TTL):</strong> HTML pages, OG images, semi-static content.<br><strong>Never cache:</strong> API responses, auth tokens, user-specific data, webhooks. A cached API response served to the wrong user = data leak.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Cache invalidation</div>
+          <div class="cell-text"><strong>Versioned filenames</strong> (best): <em>bundle.a3f9c2.js</em> — content never changes at that URL, cache forever, new deploy = new URL.<br><strong>Purge API:</strong> Cloudflare/Vercel let you explicitly delete a URL from all PoPs on deploy.<br><strong>Short TTL:</strong> accept staleness up to N minutes.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up in conversation</div>
+          <ul class="convo-list">
+            <li>Customer in India/Africa complains about slow load → <em>"Our assets are on Cloudflare's CDN with PoPs in Mumbai and Nairobi — first visit may be slow (cache miss), repeat visits are &lt;20ms."</em></li>
+            <li>Planning video/media features → Engineer will say <em>"we need object storage + CDN for this."</em> Cost conversation: CDN bandwidth pricing (Cloudflare R2 is free egress; AWS CloudFront charges per GB).</li>
+            <li>Enterprise customer with strict data residency → <em>"Can our data stay in the EU?"</em> CDN geo-restriction or private CDN configuration is the answer.</li>
+            <li>Post-deploy: <em>"users still see the old version"</em> → cache invalidation issue. Was the deploy purge called? Are filenames versioned?</li>
+            <li>Discussing SensAI's global expansion → CDN means you don't need servers in every region to have fast load times globally.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth-note"><strong>SA depth:</strong> Pull CDN (Vercel/Cloudflare default — fetches from origin on first miss) vs Push CDN (you upload assets explicitly — better for large video files). stale-while-revalidate is the key cache header pattern: serve cached immediately, refresh in background. Vercel uses this for ISR (Incremental Static Regeneration).</div>
+    </div>
+  </div>
+
+  <!-- Rate Limiter -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">04</span>
+      <div class="block-meta">
+        <div class="block-name">Rate Limiter</div>
+        <div class="block-tagline">Caps how many requests a client can make in a time window</div>
+        <div class="block-badges">
+          <span class="badge badge-routing">routing</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A gatekeeper that enforces "you can make at most N requests per time window." When exceeded, returns HTTP <strong>429 Too Many Requests</strong>. Can be enforced per user, per IP, per API key, or globally. Lives at the API gateway, in middleware, or in a shared cache like Redis.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text"><strong>Cost protection:</strong> a bug in your code or a malicious user can loop API calls — without a limit, this becomes a huge bill (especially with Claude API calls).<br><strong>Abuse/DDoS prevention:</strong> limits damage from bad actors.<br><strong>Fairness:</strong> one heavy user can't degrade experience for others.<br><strong>Cascade prevention:</strong> stops a slow service from being overwhelmed.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">4 algorithms (concept level)</div>
+          <div class="cell-text"><strong>Token bucket:</strong> refill N tokens/sec, each request costs 1. Allows bursts. Most common.<br><strong>Leaky bucket:</strong> queue requests, process at fixed rate. Smooth output.<br><strong>Fixed window:</strong> count per minute. Has an edge case at window boundary.<br><strong>Sliding window:</strong> count in last 60s rolling. Fairest, most memory-intensive.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">SensAI / Pulse relevance</div>
+          <div class="cell-text">Pulse queries Claude API per question. Without rate limiting on <em>/api/pulse/query</em>, a loop or bad actor could run thousands of expensive queries. A token bucket (10 queries/min/user) protects cost. For SensAI's Build What Matters cohort: rate limit registration endpoints to prevent spam signups.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up in conversation</div>
+          <ul class="convo-list">
+            <li>Designing pricing tiers → <em>"Free tier: 100 API calls/day. Pro: 10,000/day."</em> Rate limiting is the enforcement mechanism — the PM designs the limits, engineering implements them.</li>
+            <li>Customer hits 429 errors → <em>"You've hit your rate limit. Implement exponential backoff on retries."</em> SA explains this in integration calls.</li>
+            <li>Integrating with Anthropic API → you've seen 429s. That's Anthropic's token bucket. You need retry logic with backoff in your code.</li>
+            <li>Security review: <em>"how do you prevent API abuse?"</em> → Rate limiting + API key authentication is the standard answer.</li>
+            <li>Planning AI feature costs → <em>"We need rate limits or a single power user could spend $500 in a day on LLM calls."</em> Real PM conversation.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth-note"><strong>SA depth:</strong> Rate limits should be communicated via response headers: <em>X-RateLimit-Limit</em>, <em>X-RateLimit-Remaining</em>, <em>Retry-After</em>. Customers integrating your API will ask about these. Distributed rate limiting (multiple servers sharing one counter) requires Redis or a similar shared store — per-server counters get gamed when you have many instances.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STORAGE & DATA ===================== -->
+<section class="section" id="section-storage">
+  <div class="section-header">
+    <p class="section-eyebrow">Building blocks 05–08</p>
+    <h2 class="section-title">Storage & Data</h2>
+    <p class="section-desc">Where your system's state lives. These are the decisions with the longest-lasting consequences — migrations are expensive, and the wrong choice here constrains your product for years.</p>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" type="text" placeholder="Search this section…" oninput="filterCards(this.value, 'section-storage')">
+  </div>
+
+  <!-- Databases -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">05</span>
+      <div class="block-meta">
+        <div class="block-name">Databases <span style="font-size:11px;font-family:var(--mono);color:var(--text3);font-weight:400">(see deep dive tab)</span></div>
+        <div class="block-tagline">Persistent structured storage — the system's source of truth</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">storage</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+          <span class="badge badge-deep">deep dive →</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">Software that stores, organizes, and retrieves data reliably. Two main families: <strong>SQL</strong> (relational — tables with relationships, strict schema, ACID guarantees) and <strong>NoSQL</strong> (flexible schema, optimized for specific access patterns — documents, key-value, wide-column, graph). See the Database Deep Dive tab for full detail.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Feature design: <em>"Can we add flexible custom fields per customer?"</em> → SQL schema migrations are expensive. NoSQL document store might be right here.</li>
+            <li>Scaling conversation: <em>"We're at 10M users, queries are slow."</em> → Read replicas? Sharding? Caching layer? This is an SA technical discovery question.</li>
+            <li>Compliance: <em>"We need GDPR right-to-erasure."</em> → Database design and indexing strategy matters for deletion performance.</li>
+            <li>Enterprise deal: <em>"Can we use our own database?"</em> → Bring-your-own-database is an architectural decision with deep implications.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth-note"><strong>Go to the "Databases Deep Dive" tab</strong> for SQL vs NoSQL decision framework, all NoSQL types, replication, sharding, and the PM/SA conversation guide.</div>
+    </div>
+  </div>
+
+  <!-- Key-Value Store -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">06</span>
+      <div class="block-meta">
+        <div class="block-name">Key-Value Store</div>
+        <div class="block-tagline">Ultra-fast lookup: give me the value for this key</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">storage</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">The simplest possible data model: every piece of data has a unique key, you look it up by key. Like a hash map / dictionary, but distributed across many machines. Examples: <strong>Redis</strong> (in-memory, sub-millisecond), <strong>DynamoDB</strong> (AWS-managed, infinitely scalable), <strong>etcd</strong> (configuration, used by Kubernetes).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text">Speed. A relational DB query with joins can take 50–200ms. A Redis key lookup takes 0.1ms. Use cases: <strong>session storage</strong> (user is logged in → session token), <strong>feature flags</strong> (is_feature_enabled → true/false), <strong>rate limit counters</strong>, <strong>caching DB results</strong>, <strong>distributed locks</strong>.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">The tradeoff</div>
+          <div class="cell-text">You can only look up by the key you put in. No <em>"find all users who signed up last week"</em> — that requires scanning everything. Key-value stores are fast because they give up query flexibility. They complement a database; they don't replace it.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li><em>"Our API is slow because every request queries the user table."</em> → Cache user sessions in Redis. Read from cache first, fall back to DB.</li>
+            <li><em>"How do you implement feature flags?"</em> → Redis key per flag, checked on each request. Instant toggle without deploy.</li>
+            <li>Engineer mentions <em>"we're using Redis for this"</em> → You know it's fast, in-memory, and probably ephemeral (Redis can lose data on crash unless configured otherwise).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blob Store -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">07</span>
+      <div class="block-meta">
+        <div class="block-name">Blob Store</div>
+        <div class="block-tagline">Cheap, durable storage for files, images, videos, backups</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">storage</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">Object storage for unstructured data — files, images, videos, PDFs, ML models, database backups. Examples: <strong>AWS S3</strong>, <strong>Google Cloud Storage</strong>, <strong>Cloudflare R2</strong>. You store a file at a key (like a path), retrieve it by that key. Not a filesystem, not a database — designed for large, infrequently-mutated objects.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Why never serve files from app server</div>
+          <div class="cell-text">An app server handling a 50MB video upload is using a thread that could handle 1,000 API requests instead. And if 100 users download simultaneously, your server is crushed. Blob store + CDN separates the byte-serving problem from the business logic problem. S3 + CloudFront is the standard pattern.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Cost structure (SA-relevant)</div>
+          <div class="cell-text"><strong>Storage:</strong> ~$0.02/GB/month (S3 Standard). Cheap.<br><strong>Egress (downloads):</strong> ~$0.09/GB (AWS charges heavily). Use Cloudflare R2 ($0 egress) for cost-sensitive workloads.<br><strong>Operations:</strong> cost per PUT/GET request — matters at massive scale.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Any feature with user uploads → <em>"Where do uploaded resumes / portfolios / certificates go?"</em> → Blob store.</li>
+            <li>Video course feature for SensAI → requires blob store + CDN. Cost estimate: storage + CDN egress × expected views.</li>
+            <li>Enterprise: <em>"We need our files in our own S3 bucket."</em> → Bring-your-own-storage architecture. Common enterprise requirement.</li>
+            <li>Compliance: <em>"Can you store files in the EU only?"</em> → S3 bucket region selection. Simple configuration, contractual commitment.</li>
+            <li><em>"How big is your database?"</em> → Distinguish: structured data (DB) vs blob data (object storage). They scale differently and cost differently.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Distributed Cache -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">08</span>
+      <div class="block-meta">
+        <div class="block-name">Distributed Cache</div>
+        <div class="block-tagline">In-memory layer that absorbs reads before they hit the database</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">storage</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A fast in-memory store shared across multiple app servers. When a user requests data, the app checks the cache first. If found (cache hit), returns instantly. If not (cache miss), queries the DB, stores result in cache, returns. Next request gets it from cache. Redis and Memcached are the dominant tools.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Why it matters</div>
+          <div class="cell-text">DB queries: 10–100ms. Cache hit: 0.1–1ms. A well-implemented cache can serve 90% of reads without touching the database — meaning you need far fewer (and cheaper) DB instances. Facebook's social graph serves billions of reads per day primarily from Memcached.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Eviction & consistency tradeoffs</div>
+          <div class="cell-text"><strong>Eviction policies:</strong> LRU (least recently used) — drop oldest items when full. Most common.<br><strong>Consistency risk:</strong> DB updates don't auto-update cache. A user might see stale data for TTL seconds. Fine for dashboards; not fine for balances.<br><strong>Cache invalidation:</strong> delete or update cache when DB changes.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li><em>"Reports are slow."</em> → Cache the report result for 5 minutes. 99% of loads are repeat views; only 1% need fresh data.</li>
+            <li>Scaling conversation: <em>"We're getting DB read bottlenecks."</em> → Read replicas or caching layer (or both).</li>
+            <li>SensAI: course content, learner progress summaries → cache aggressively. Placement records → short TTL or no cache (must be accurate).</li>
+            <li>Customer asks about <em>"real-time data"</em> → clarify: is real-time truly needed? Cache with 30s TTL often feels real-time and costs 10× less.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DATABASE DEEP DIVE ===================== -->
+<section class="section" id="section-databases">
+  <div class="section-header">
+    <p class="section-eyebrow">Deep dive — building block 05</p>
+    <h2 class="section-title">Databases: SQL vs NoSQL</h2>
+    <p class="section-desc">The most consequential architectural choice in any product. Database migrations are expensive, slow, and risky — which is why this decision deserves more depth than any other building block.</p>
+  </div>
+
+  <div class="db-section">
+    <h3 class="db-section-title">The core difference</h3>
+    <p class="db-intro">SQL databases organize data into tables with defined schemas and relationships. NoSQL databases trade structure and guarantees for speed, flexibility, or scale. Neither is better — the right choice depends entirely on your data's shape and access patterns.</p>
+
+    <div class="comparison-grid">
+      <div class="cmp-card sql">
+        <div class="cmp-title">SQL (Relational)</div>
+        <div class="cmp-subtitle">PostgreSQL · MySQL · SQLite · Supabase</div>
+        <div class="cmp-row"><strong>Schema:</strong> defined upfront. Every row in a table has the same columns.</div>
+        <div class="cmp-row"><strong>Relationships:</strong> foreign keys, JOINs. <em>Give me all placements for this learner with their company name.</em></div>
+        <div class="cmp-row"><strong>ACID guarantees:</strong> Atomicity, Consistency, Isolation, Durability. Transactions either fully complete or fully fail. Critical for financial data.</div>
+        <div class="cmp-row"><strong>Query flexibility:</strong> SQL lets you ask almost any question of your data — aggregate, filter, join, group by anything.</div>
+        <div class="cmp-row"><strong>Scaling:</strong> traditionally vertical (bigger server). Horizontal sharding is possible but complex.</div>
+      </div>
+      <div class="cmp-card nosql">
+        <div class="cmp-title">NoSQL (Non-relational)</div>
+        <div class="cmp-subtitle">MongoDB · DynamoDB · Cassandra · Redis</div>
+        <div class="cmp-row"><strong>Schema:</strong> flexible. Each document/record can have different fields. Great for evolving data models.</div>
+        <div class="cmp-row"><strong>Relationships:</strong> generally avoided. Data is denormalized — you embed related data in one document rather than joining across tables.</div>
+        <div class="cmp-row"><strong>Consistency:</strong> often eventual consistency (CAP theorem — see earlier module). Faster writes, but reads may be slightly stale.</div>
+        <div class="cmp-row"><strong>Query flexibility:</strong> limited. You design queries upfront and optimize for specific access patterns. Ad-hoc analysis is harder.</div>
+        <div class="cmp-row"><strong>Scaling:</strong> built for horizontal scale. Add more nodes, distribute data across them. This is their core advantage.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="db-section">
+    <h3 class="db-section-title">The decision framework</h3>
+    <p class="db-intro">Ask these questions when evaluating a database choice — for your own products or in customer technical discovery.</p>
+
+    <table class="decision-table">
+      <thead>
+        <tr>
+          <th>Question</th>
+          <th>SQL if…</th>
+          <th>NoSQL if…</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Data relationships</td>
+          <td>Data has many relationships. Learner → placements → companies → roles. JOINs are your friend.</td>
+          <td>Data is self-contained. A user's activity feed — each event stands alone, no JOINs needed.</td>
+        </tr>
+        <tr>
+          <td>Schema stability</td>
+          <td>Schema is known upfront and changes rarely. Core entities: users, orders, invoices.</td>
+          <td>Schema evolves rapidly. Each customer has different custom fields. Flexible per-document structure needed.</td>
+        </tr>
+        <tr>
+          <td>Consistency requirement</td>
+          <td>Must be correct immediately. Bank balances, inventory, placement records. No stale data.</td>
+          <td>Eventual consistency acceptable. Like counts, view counters, activity feeds. Slight lag is fine.</td>
+        </tr>
+        <tr>
+          <td>Query patterns</td>
+          <td>Complex ad-hoc queries. Reports, analytics, "show me all X where Y and Z." Need flexibility.</td>
+          <td>Known, repetitive access patterns. "Get user profile by ID." Optimized for that one query at scale.</td>
+        </tr>
+        <tr>
+          <td>Scale</td>
+          <td>Moderate scale. Millions of users. Supabase/PostgreSQL handles this fine with read replicas.</td>
+          <td>Massive, unpredictable scale. Billions of records, global distribution, need to add nodes easily.</td>
+        </tr>
+        <tr>
+          <td>Transactions</td>
+          <td>Multi-step operations must be atomic. Transfer money: debit A AND credit B, or neither.</td>
+          <td>Each write is independent. Log an event. Record a click. Failure of one doesn't affect others.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pm-callout">
+      <strong>PM frame:</strong> The database choice constrains your product roadmap. Chose a rigid SQL schema early? Adding flexible custom fields per customer is now a complex migration. Chose an eventual-consistency NoSQL store? Building a financial audit trail on it is now a liability. The right question before any major data model decision is: "what queries will we need to run in 2 years?"
+    </div>
+  </div>
+
+  <div class="db-section">
+    <h3 class="db-section-title">The 4 types of NoSQL</h3>
+    <p class="db-intro">NoSQL is not one thing — it's four different data models optimized for four different problems. Knowing which is which matters when engineers discuss architecture or when you're evaluating a vendor's tech stack.</p>
+
+    <div class="nosql-types">
+      <div class="nosql-type">
+        <div class="nosql-type-name">Document store</div>
+        <div class="nosql-type-eg">MongoDB · Firestore · CouchDB</div>
+        <div class="nosql-type-desc">Stores data as JSON-like documents. Each document can have different fields. Natural fit for objects that vary per record — user profiles, product catalogs, CMS content.</div>
+        <div class="nosql-type-use">SensAI use: course content, learner profiles with variable fields</div>
+      </div>
+      <div class="nosql-type">
+        <div class="nosql-type-name">Key-value store</div>
+        <div class="nosql-type-eg">Redis · DynamoDB · etcd</div>
+        <div class="nosql-type-desc">Simplest model: key → value. Extremely fast. No query flexibility. Use for caching, sessions, feature flags, rate limit counters, leaderboards.</div>
+        <div class="nosql-type-use">Pulse use: caching Claude responses, rate limit counters</div>
+      </div>
+      <div class="nosql-type">
+        <div class="nosql-type-name">Wide-column store</div>
+        <div class="nosql-type-eg">Cassandra · HBase · BigTable</div>
+        <div class="nosql-type-desc">Tables with flexible columns per row, optimized for high-write throughput and time-series data. Netflix uses Cassandra for viewing history. Designed for massive write scale.</div>
+        <div class="nosql-type-use">Use case: IoT sensor data, time-series logs, activity streams at scale</div>
+      </div>
+      <div class="nosql-type">
+        <div class="nosql-type-name">Graph database</div>
+        <div class="nosql-type-eg">Neo4j · Amazon Neptune</div>
+        <div class="nosql-type-desc">Optimized for relationship traversal. "Friends of friends who also liked X." Social networks, recommendation engines, fraud detection (unusual connection patterns), knowledge graphs.</div>
+        <div class="nosql-type-use">Use case: LinkedIn's social graph, fraud detection networks</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="db-section">
+    <h3 class="db-section-title">Replication & Scaling — what the options mean</h3>
+    <p class="db-intro">When engineers discuss database scaling, these are the three main patterns. As a PM or SA you need to know what each one costs and what it enables.</p>
+
+    <div class="replication-grid">
+      <div class="rep-card">
+        <div class="rep-title">Read Replicas</div>
+        <div class="rep-desc">Primary handles writes. Copies (replicas) serve reads. Most queries are reads — dashboards, reports, lookups. Replicas lag slightly behind primary (eventual consistency on reads).</div>
+        <div class="rep-use">When: read-heavy workloads. First scaling move for most apps. Supabase, RDS both support this easily.</div>
+      </div>
+      <div class="rep-card">
+        <div class="rep-title">Vertical Scaling</div>
+        <div class="rep-desc">Bigger server — more CPU, RAM, faster SSD. Simplest solution. PostgreSQL on a 64-core machine with 512GB RAM handles enormous load. Hard ceiling and single point of failure.</div>
+        <div class="rep-use">When: your DB is the bottleneck and you haven't maxed out the instance size yet. Cheaper than you think before hitting limits.</div>
+      </div>
+      <div class="rep-card">
+        <div class="rep-title">Sharding</div>
+        <div class="rep-desc">Split data across multiple databases by a shard key (e.g. by customer ID range). Each shard is a separate DB server. Theoretically infinite scale. Extremely complex — cross-shard queries, rebalancing, operational overhead.</div>
+        <div class="rep-use">When: you've exhausted read replicas and vertical scaling. Last resort for SQL. Built-in for Cassandra/DynamoDB.</div>
+      </div>
+    </div>
+
+    <div class="sa-callout">
+      <strong>SA conversation:</strong> When a customer asks "can you handle our scale?" — the honest progression is: (1) how many reads vs writes? (2) do you need strong consistency? (3) current approach: Postgres with read replicas handles 100K+ RPS for reads. (4) if you're at Cassandra-scale (billions of writes/day), that's a different architecture conversation. Most B2B SaaS never needs to leave Postgres.
+    </div>
+
+    <div class="pm-callout">
+      <strong>PM frame:</strong> Multi-tenancy architecture is a database decision. Do you put all customers in one DB (shared schema — simpler, cheaper, harder to isolate), one DB per customer (dedicated — expensive, great isolation, common for enterprise), or one schema per customer in one DB (middle ground)? This directly affects pricing, compliance, and feature velocity. Decide early — migrating later is painful.
+    </div>
+  </div>
+
+  <div class="db-section">
+    <h3 class="db-section-title">For SensAI & Pulse specifically</h3>
+    <p class="db-intro">Concrete recommendations based on your actual systems, not hypotheticals.</p>
+    <div class="body-grid">
+      <div class="body-cell">
+        <div class="cell-label">SensAI — right now</div>
+        <div class="cell-text"><strong>Supabase (PostgreSQL)</strong> is the correct choice and will remain so until tens of thousands of learners. Learner → course → progress → placement is a relational model. SQL gives you the reporting flexibility you need. Row-level security (RLS) in Supabase handles multi-tenant data isolation. You don't need NoSQL.</div>
+      </div>
+      <div class="body-cell">
+        <div class="cell-label">Pulse — right now</div>
+        <div class="cell-text"><strong>PostgreSQL</strong> for the core placement data. Possibly <strong>Redis</strong> (or even in-memory) for caching frequent query results from Claude. The Pulse golden-set evaluation data (question → expected answer pairs) fits naturally in Postgres. Don't add NoSQL complexity before you need scale.</div>
+      </div>
+      <div class="body-cell">
+        <div class="cell-label">When to reconsider</div>
+        <div class="cell-text">If you build a learner activity feed (millions of events/day), consider a time-series or wide-column store. If you add a recommendation engine ("learners like you also studied X"), consider a graph DB or vector DB. If you need per-customer schema flexibility, MongoDB document model becomes attractive. All of these are 10,000+ learner problems.</div>
+      </div>
+      <div class="body-cell">
+        <div class="cell-label">The vector DB conversation</div>
+        <div class="cell-text">For AI features — semantic search, similar content, RAG — you need a <strong>vector database</strong> (pgvector in Postgres, Pinecone, Weaviate). This stores ML embeddings and lets you query by semantic similarity. "Find lessons similar to this one." Supabase has pgvector built in — you already have what you need for basic RAG.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ASYNC ===================== -->
+<section class="section" id="section-async">
+  <div class="section-header">
+    <p class="section-eyebrow">Building blocks 09–10</p>
+    <h2 class="section-title">Async Communication</h2>
+    <p class="section-desc">Decoupling services so they don't need to be running simultaneously. The difference between a brittle system and a resilient one is often whether work is synchronous or async.</p>
+  </div>
+
+  <!-- Messaging Queue -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">09</span>
+      <div class="block-meta">
+        <div class="block-name">Messaging Queue</div>
+        <div class="block-tagline">Store work to be done; process it when you're ready</div>
+        <div class="block-badges">
+          <span class="badge badge-async">async</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A buffer between a producer (sends work) and a consumer (does work). Producer drops a message and moves on — doesn't wait for it to be processed. Consumer picks it up when ready. Examples: <strong>AWS SQS</strong>, <strong>RabbitMQ</strong>, <strong>Kafka</strong> (more powerful, also pub-sub). Slack events to Pulse's backend are effectively a queue.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text"><strong>Decoupling:</strong> if the consumer is down, messages wait — they aren't lost.<br><strong>Traffic absorption:</strong> Uber gets 10K ride requests/sec at New Year's. Queue absorbs the spike; workers process at sustainable rate.<br><strong>Reliability:</strong> if processing fails, messages can be retried automatically.<br><strong>Long-running work:</strong> email sends, ML inference, report generation shouldn't block a web request.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Key concepts</div>
+          <div class="cell-text"><strong>At-least-once delivery:</strong> message delivered at least once, possibly more. Consumer must be idempotent (same input → same result).<br><strong>Dead-letter queue:</strong> messages that fail repeatedly go here for inspection.<br><strong>Ordering:</strong> most queues don't guarantee order. Kafka does (within a partition).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li><em>"Sending welcome emails is slowing down registration."</em> → Put email jobs on a queue. Registration responds immediately, email sends asynchronously.</li>
+            <li><em>"Our AI processing takes 30 seconds — the user gets a timeout."</em> → Queue the job, return a job ID, poll for completion. Standard async pattern for LLM calls.</li>
+            <li>Reliability question: <em>"What happens if your server crashes mid-processing?"</em> → Unacknowledged queue messages are redelivered. No work lost.</li>
+            <li>SensAI: batch processing learner progress reports, sending placement notifications, running eval pipelines for Pulse → all should be queued, not synchronous.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pub-Sub -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">10</span>
+      <div class="block-meta">
+        <div class="block-name">Pub-Sub System</div>
+        <div class="block-tagline">One event, many independent consumers</div>
+        <div class="block-badges">
+          <span class="badge badge-async">async</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">Queue vs Pub-Sub</div>
+          <div class="cell-text"><strong>Queue:</strong> one message → one consumer. Work is divided among workers. <em>Process this payment</em> — only one service should do it.<br><strong>Pub-Sub:</strong> one message → all subscribers. Fan-out. <em>User placed order</em> → inventory service receives it AND email service receives it AND analytics receives it. Same event, independent reactions.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">What problem it solves</div>
+          <div class="cell-text">Without pub-sub, adding a new consumer means modifying the producer. With pub-sub, the producer doesn't know or care how many services are listening. New service subscribes, starts receiving events — zero changes to the producer. This is how microservices stay decoupled as systems grow.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li><em>"When a learner completes a module, we need to update progress, send a certificate, notify the counselor, and update the placement dashboard."</em> → Pub-sub: one event, four independent subscribers.</li>
+            <li>Webhook design: when you send webhooks to customers, you're implementing a pub-sub pattern — your system is the publisher, customer endpoints are subscribers.</li>
+            <li><em>"How do your integrations work?"</em> → Event-driven architecture via pub-sub means adding a new integration doesn't require changing core product code.</li>
+            <li>Kafka vs SQS: Kafka retains events for days/weeks so late subscribers can replay history. SQS deletes processed messages. Important architectural difference for audit logs and compliance.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== IDENTITY ===================== -->
+<section class="section" id="section-identity">
+  <div class="section-header">
+    <p class="section-eyebrow">Building blocks 11–12</p>
+    <h2 class="section-title">Identity & Counters</h2>
+    <p class="section-desc">Generating unique IDs and handling high-frequency counting — two problems that seem trivial but break in surprising ways at scale.</p>
+  </div>
+
+  <!-- Sequencer -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">11</span>
+      <div class="block-meta">
+        <div class="block-name">Sequencer / Unique ID Generator</div>
+        <div class="block-tagline">Globally unique IDs that work across distributed nodes</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">identity</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">Every record needs a unique ID. At scale, generating IDs without a central authority is non-trivial — two servers could generate the same ID simultaneously. Three approaches: <strong>UUID</strong> (random, unique but not sortable, not readable), <strong>Snowflake/ULID</strong> (timestamp + machine ID + sequence — sortable, unique, readable), <strong>Database auto-increment</strong> (simple, but DB is a bottleneck).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>API design review: <em>"Are your IDs sequential integers?"</em> → Sequential IDs are a security risk (user can enumerate records: /users/1, /users/2…). UUIDs or Snowflake IDs prevent this.</li>
+            <li>Data merges: importing learner records from two systems → ID collision risk. Strategy needed before merge.</li>
+            <li>Audit logs: sortable IDs (Snowflake/ULID) mean logs are automatically in chronological order — no ORDER BY needed.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sharded Counters -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">12</span>
+      <div class="block-meta">
+        <div class="block-name">Sharded Counters</div>
+        <div class="block-tagline">Counting millions of concurrent events without a write bottleneck</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">storage</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A naive counter is one DB row — incrementing it from millions of concurrent requests causes a write lock bottleneck. Sharded counters split into N rows (e.g. 100 shards). Each write goes to a random shard. To read the total, sum all shards. Trades write speed for read complexity.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Any feature with high-concurrency writes: like counts, view counts, inventory decrements during flash sales.</li>
+            <li><em>"Why does the like count on a viral post sometimes go up and down?"</em> → Sharded counters + eventual consistency. The count is approximate during high traffic, converges to accurate shortly after.</li>
+            <li>Product decision: do you need exact counts or approximate? Approximate (HyperLogLog algorithm) is 100× cheaper. For view counts, approximate is fine. For inventory, you need exact.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SEARCH & COMPUTE ===================== -->
+<section class="section" id="section-discover">
+  <div class="section-header">
+    <p class="section-eyebrow">Building blocks 13–14</p>
+    <h2 class="section-title">Search & Compute</h2>
+    <p class="section-desc">Indexing data so it's findable, and executing work outside the request path.</p>
+  </div>
+
+  <!-- Distributed Search -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">13</span>
+      <div class="block-meta">
+        <div class="block-name">Distributed Search</div>
+        <div class="block-tagline">Full-text search and indexing across large datasets</div>
+        <div class="block-badges">
+          <span class="badge badge-storage">storage</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A system that indexes documents and allows fast full-text search. Core data structure: <strong>inverted index</strong> (word → list of documents containing it). Like a book index, but for your entire dataset. <strong>Elasticsearch</strong> and <strong>Solr</strong> (both built on Lucene) are dominant. Postgres has basic full-text search built in (good enough for small scale).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">DB query vs search index</div>
+          <div class="cell-text">DB: <em>WHERE name = 'Gayathri'</em> — exact match, uses B-tree index. Fast.<br>Search: <em>"find learners who worked in fintech"</em> — full text across multiple fields, fuzzy matching, relevance ranking, synonyms. A SQL LIKE query with % prefix is a full table scan — kills performance at scale. Search indexes are purpose-built for this.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Any product with a search bar on user-generated content → Postgres full-text for &lt;100K records, Elasticsearch/Typesense beyond that.</li>
+            <li>Pulse: <em>"Search all placement notes for 'backend role'"</em> → full-text search across free-form notes. Not a SQL query.</li>
+            <li>SensAI course search: <em>"find lessons about system design"</em> → semantic search (vector DB) beats keyword search for educational content.</li>
+            <li>Enterprise: <em>"We need to search across all our documents."</em> → Elasticsearch or OpenSearch (AWS). Cost: indexing pipeline + storage + query compute. Not trivial to operate.</li>
+            <li>Log analysis (Pulse eval pipeline): Elasticsearch is the backbone of the ELK stack — Elasticsearch + Logstash + Kibana. Standard for log search.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Scheduler -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">14</span>
+      <div class="block-meta">
+        <div class="block-name">Distributed Task Scheduler</div>
+        <div class="block-tagline">Run background jobs reliably, on schedule or on trigger</div>
+        <div class="block-badges">
+          <span class="badge badge-async">async</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A system for running work outside the request-response cycle, either on a schedule (cron jobs — every day at 9am, generate placement report) or triggered by events (user signed up → send onboarding sequence). Examples: <strong>Celery</strong> (Python), <strong>BullMQ</strong> (Node), <strong>Temporal</strong> (complex workflows), <strong>GitHub Actions</strong>, <strong>Railway Cron</strong>.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Why it matters</div>
+          <div class="cell-text">Work that doesn't belong in a web request: ML model retraining, sending daily digests, cleaning up stale data, running evals, generating weekly reports, syncing with external APIs. The scheduler ensures these run reliably, retries on failure, and doesn't block users waiting for a response.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Pulse: running the Ask Pulse golden-set eval every night → scheduled task. Slack summary of yesterday's placements → cron job at 8am.</li>
+            <li>SensAI: weekly learner progress emails, certificate generation after course completion, cohort reminders.</li>
+            <li><em>"Can you send automated follow-ups after 7 days?"</em> → Scheduled task. PM decision: what triggers it, what's the content. Engineering decision: which scheduler, retry behavior.</li>
+            <li>SLA question: <em>"How quickly do you process X?"</em> → Depends on queue depth and worker count. Knowable, tunable — SA can give honest answer with architecture context.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== OBSERVABILITY ===================== -->
+<section class="section" id="section-observability">
+  <div class="section-header">
+    <p class="section-eyebrow">Building blocks 15–16</p>
+    <h2 class="section-title">Observability</h2>
+    <p class="section-desc">How you know what's happening inside a running system. Often the last thing built, always the first thing missed during an incident.</p>
+  </div>
+
+  <!-- Distributed Logging -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">15</span>
+      <div class="block-meta">
+        <div class="block-name">Distributed Logging</div>
+        <div class="block-tagline">Collect and search logs from every service in one place</div>
+        <div class="block-badges">
+          <span class="badge badge-ops">ops</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">A pipeline that aggregates logs from all services into a central searchable store. Without it, debugging means SSHing into each server and grepping log files — impossible when you have 50 services. Standard stack: <strong>Fluentd/Logstash</strong> (collect) → <strong>Kafka</strong> (buffer) → <strong>Elasticsearch</strong> (store/index) → <strong>Kibana</strong> (visualize). Or managed: <strong>Datadog</strong>, <strong>Grafana Cloud</strong>, <strong>AWS CloudWatch</strong>.</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">Structured vs unstructured logs</div>
+          <div class="cell-text"><strong>Unstructured:</strong> <em>"User 123 logged in at 14:32"</em> — readable but hard to query.<br><strong>Structured (JSON):</strong> <em>{"user_id": 123, "event": "login", "timestamp": "14:32", "ip": "…"}</em> — queryable, filterable, aggregatable. Always use structured logs for production systems.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Security review: <em>"Do you have audit logs?"</em> → All user actions logged with timestamps and actor IDs, searchable, retained for N years. Compliance requirement.</li>
+            <li>Incident: <em>"What happened at 3pm yesterday?"</em> → Centralized logs with millisecond timestamps across all services. SA can speak to log retention policy and search capability.</li>
+            <li>Pulse eval pipeline: logging each query, Claude's response, the eval score → structured logs that feed your golden-set dashboard.</li>
+            <li>Enterprise procurement: <em>"Where are logs stored? Who can access them? How long are they retained?"</em> → Standard security questionnaire item. SA owns this answer.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Monitoring -->
+  <div class="block-card" onclick="toggleCard(this)">
+    <div class="block-header">
+      <span class="block-num">16</span>
+      <div class="block-meta">
+        <div class="block-name">Service Monitoring</div>
+        <div class="block-tagline">Know your system is healthy before your users tell you it isn't</div>
+        <div class="block-badges">
+          <span class="badge badge-ops">ops</span>
+          <span class="badge badge-pm">pm relevant</span>
+          <span class="badge badge-sa">sa relevant</span>
+        </div>
+      </div>
+      <span class="block-chevron">⌄</span>
+    </div>
+    <div class="block-body">
+      <div class="body-grid">
+        <div class="body-cell">
+          <div class="cell-label">What it is</div>
+          <div class="cell-text">Collecting and alerting on metrics about system behavior. <strong>The four golden signals</strong> (Google SRE): <strong>Latency</strong> (how long requests take), <strong>Traffic</strong> (requests per second), <strong>Errors</strong> (error rate), <strong>Saturation</strong> (how full is your resource — CPU, memory, disk). Tools: <strong>Datadog</strong>, <strong>Prometheus + Grafana</strong>, <strong>New Relic</strong>, <strong>Sentry</strong> (error tracking).</div>
+        </div>
+        <div class="body-cell">
+          <div class="cell-label">SLOs, SLIs, SLAs</div>
+          <div class="cell-text"><strong>SLI</strong> (indicator): measured metric — e.g. % of requests under 200ms.<br><strong>SLO</strong> (objective): internal target — e.g. 99.9% of requests under 200ms.<br><strong>SLA</strong> (agreement): contractual commitment to customers — e.g. 99.9% uptime or credit issued.<br>SLAs should be looser than SLOs — you commit to customers what you're confident achieving internally.</div>
+        </div>
+        <div class="body-cell full">
+          <div class="cell-label">When it comes up</div>
+          <ul class="convo-list">
+            <li>Enterprise procurement: <em>"What's your uptime SLA?"</em> → 99.9% (8.7hrs downtime/yr) is standard. 99.99% requires significant investment. SA needs to know what's contractually offered and what the monitoring/alerting infrastructure actually supports.</li>
+            <li>Customer escalation: <em>"Your product was slow yesterday."</em> → Monitoring tells you exactly when, for how long, which endpoints, which users. Evidence-based incident response vs guessing.</li>
+            <li>PM roadmap: <em>"Should we invest in monitoring?"</em> → Monitoring isn't optional above a certain scale. Invisible failures = lost customers. MTTR (Mean Time To Recovery) is a product metric.</li>
+            <li>Pulse: monitoring Claude API latency, error rates on queries, Slack webhook delivery success — these are your product health metrics. Sentry for error tracking is a 30-minute setup that pays dividends immediately.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth-note"><strong>SA depth:</strong> Distinguish between monitoring (are we healthy?) and observability (why are we unhealthy?). Observability = logs + metrics + traces. Distributed tracing (Jaeger, Datadog APM) lets you follow a single request across 10 microservices and see exactly where it slowed down. Critical for complex architectures.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  system-design-pm-sa-reference · built for SensAI & Pulse context · not an engineer's manual
+</footer>
+
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleCard(card) {
+    const wasOpen = card.classList.contains('open');
+    card.classList.toggle('open', !wasOpen);
+  }
+
+  function filterCards(query, sectionId) {
+    const section = document.getElementById(sectionId);
+    const cards = section.querySelectorAll('.block-card');
+    const q = query.toLowerCase();
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = (!q || text.includes(q)) ? '' : 'none';
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('backTop').classList.toggle('visible', window.scrollY > 400);
+  });
+</script>
+</body>
+</html>

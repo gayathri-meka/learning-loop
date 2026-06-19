@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Give It a Goal and Walk Away — The Real Story of Agentic AI</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --bg2: #efece4;
+    --surface: #eceae4;
+    --surface2: #e4e1d8;
+    --border: #d6d2c7;
+    --rule: #cbc6b9;
+    --text: #1c1b18;
+    --muted: #756c5d;
+    --faint: #9b9384;
+    --code-bg: #e8e5dd;
+    --origin: #1a7a5e;   /* the idea */
+    --hype: #b3471a;     /* the spring & crash */
+    --craft: #7a6200;    /* the reframe / plumbing */
+    --today: #1a5c8a;    /* where it sits now */
+    --ink-accent: #2a2722;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- reading progress ---- */
+  #progress {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: var(--hype); z-index: 200; transition: width 0.1s linear;
+  }
+
+  /* ---- nav ---- */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(245,243,238,0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0;
+    height: 50px; padding: 0 22px; overflow-x: auto;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-logo {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em;
+    color: var(--hype); white-space: nowrap; margin-right: 22px; flex-shrink: 0; font-weight: 600;
+  }
+  .nav-links { display: flex; gap: 1px; flex-shrink: 0; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 12.5px;
+    padding: 6px 11px; border-radius: 4px; white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--surface2); }
+  .nav-links a:focus-visible { outline: 2px solid var(--today); outline-offset: 2px; }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---- hero ---- */
+  header.hero {
+    padding: 78px 0 52px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 28px; font-weight: 500;
+  }
+  .eyebrow b { color: var(--hype); font-weight: 600; }
+  h1.title {
+    font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(40px, 8vw, 76px);
+    line-height: 1.02; letter-spacing: -0.02em; margin-bottom: 30px; color: var(--ink-accent);
+  }
+  .deck {
+    font-family: 'Fraunces', serif; font-weight: 300; font-style: italic;
+    font-size: clamp(20px, 3.4vw, 25px); line-height: 1.5; color: var(--muted);
+    max-width: 620px; margin-bottom: 34px;
+  }
+  .byline {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--faint);
+    display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+  }
+  .byline span { white-space: nowrap; }
+  .byline .dot { color: var(--rule); }
+
+  /* ---- timeline strip ---- */
+  .timeline {
+    margin: 0 auto; max-width: 1080px; padding: 30px 28px 6px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tl-item { position: relative; padding: 0 10px 26px; }
+  .tl-item::before {
+    content: ''; position: absolute; left: 10px; right: -2px; top: 7px; height: 2px;
+    background: var(--rule);
+  }
+  .tl-item:last-child::before { right: 10px; }
+  .tl-dot {
+    width: 11px; height: 11px; border-radius: 50%; background: var(--bg);
+    border: 2.5px solid var(--craft); position: relative; z-index: 2; margin-bottom: 13px;
+  }
+  .tl-item.o .tl-dot { border-color: var(--origin); }
+  .tl-item.h .tl-dot { border-color: var(--hype); }
+  .tl-item.c .tl-dot { border-color: var(--craft); }
+  .tl-item.t .tl-dot { border-color: var(--today); }
+  .tl-yr { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .tl-lab { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+  @media (max-width: 720px) {
+    .timeline { grid-template-columns: repeat(2, 1fr); gap: 4px 0; }
+    .tl-item::before { display: none; }
+    .tl-item { padding-bottom: 18px; border-left: 2px solid var(--rule); padding-left: 14px; }
+  }
+
+  /* ---- chapter structure ---- */
+  section.chapter { padding: 60px 0 8px; }
+  .ch-eyebrow {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 16px; font-weight: 600;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ch-eyebrow .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; font-size: 12px; color: #fff; flex-shrink: 0;
+  }
+  .ch-eyebrow .era { color: var(--faint); font-weight: 500; letter-spacing: 0.08em; }
+  .origin .num { background: var(--origin); } .origin .ch-eyebrow { color: var(--origin); }
+  .hype .num   { background: var(--hype); }   .hype .ch-eyebrow { color: var(--hype); }
+  .craft .num  { background: var(--craft); }  .craft .ch-eyebrow { color: var(--craft); }
+  .today .num  { background: var(--today); }  .today .ch-eyebrow { color: var(--today); }
+
+  h2.ch-title {
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.08; letter-spacing: -0.015em; margin-bottom: 26px; color: var(--ink-accent);
+  }
+  section.chapter p { margin-bottom: 22px; }
+  section.chapter p .lead-in {
+    font-variant: small-caps; letter-spacing: 0.03em; font-weight: 600; color: var(--ink-accent);
+  }
+  strong { font-weight: 600; color: var(--ink-accent); }
+  em { font-style: italic; }
+  a.ref {
+    color: var(--today); text-decoration: none; border-bottom: 1px solid rgba(26,92,138,0.3);
+    font-weight: 500;
+  }
+  a.ref:hover { border-bottom-color: var(--today); }
+
+  .mono-term {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.86em;
+    background: var(--code-bg); padding: 1px 6px; border-radius: 4px; color: var(--ink-accent);
+  }
+
+  /* ---- pull quote ---- */
+  blockquote {
+    margin: 38px 0; padding: 4px 0 4px 26px; border-left: 3px solid var(--hype);
+  }
+  blockquote.origin { border-left-color: var(--origin); }
+  blockquote.craft  { border-left-color: var(--craft); }
+  blockquote.today  { border-left-color: var(--today); }
+  blockquote p {
+    font-family: 'Fraunces', serif; font-weight: 300; font-style: italic;
+    font-size: clamp(21px, 3.6vw, 27px); line-height: 1.42; color: var(--ink-accent); margin: 0 0 12px;
+  }
+  blockquote cite {
+    font-family: 'IBM Plex Mono', monospace; font-style: normal; font-size: 12.5px;
+    color: var(--muted); letter-spacing: 0.02em;
+  }
+  blockquote cite::before { content: '— '; color: var(--faint); }
+
+  /* ---- aside / callout card ---- */
+  .callout {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px 26px; margin: 34px 0;
+  }
+  .callout .k {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--craft); font-weight: 600; margin-bottom: 12px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout p { font-size: 16.5px; line-height: 1.66; }
+
+  /* ---- face-off (architecture wars) ---- */
+  .faceoff { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 32px 0; }
+  .faceoff .side {
+    border: 1px solid var(--border); border-radius: 12px; padding: 22px 22px 20px; background: var(--surface);
+  }
+  .faceoff .side.a { border-top: 3px solid var(--hype); }
+  .faceoff .side.b { border-top: 3px solid var(--today); }
+  .faceoff .who {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500;
+  }
+  .faceoff .claim {
+    font-family: 'Fraunces', serif; font-size: 20px; font-weight: 400; line-height: 1.2;
+    margin-bottom: 12px; color: var(--ink-accent);
+  }
+  .faceoff .side p { font-size: 15.5px; line-height: 1.6; margin-bottom: 0; color: var(--muted); }
+  .faceoff .vs {
+    grid-column: 1 / -1; text-align: center; font-family: 'Fraunces', serif; font-style: italic;
+    color: var(--faint); font-size: 16px; margin: -4px 0;
+  }
+  @media (max-width: 620px) { .faceoff { grid-template-columns: 1fr; } }
+
+  /* ---- stat progression (SWE-bench) ---- */
+  .progression {
+    margin: 34px 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    background: var(--surface);
+  }
+  .progression .head {
+    padding: 18px 24px 14px; border-bottom: 1px solid var(--border);
+  }
+  .progression .head .lab {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--today); font-weight: 600;
+  }
+  .progression .head .sub { font-size: 14.5px; color: var(--muted); margin-top: 4px; }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr 56px; align-items: center; gap: 12px; padding: 9px 24px; }
+  .bar-row .when { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--muted); }
+  .bar-track { background: var(--surface2); border-radius: 5px; height: 22px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--today), #2f7fb0); }
+  .bar-row .pct { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink-accent); text-align: right; }
+  .progression .foot { padding: 12px 24px 16px; font-size: 13px; color: var(--faint); line-height: 1.5; }
+
+  /* ---- balance sheet ---- */
+  .ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0; }
+  .ledger .col { border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; background: var(--surface); }
+  .ledger .col h4 {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 14px; font-weight: 600;
+  }
+  .ledger .works h4 { color: var(--origin); }
+  .ledger .hard h4 { color: var(--hype); }
+  .ledger ul { list-style: none; }
+  .ledger li { font-size: 15.5px; line-height: 1.5; padding: 7px 0 7px 22px; position: relative; color: var(--muted); border-top: 1px solid var(--border); }
+  .ledger li:first-child { border-top: none; }
+  .ledger li::before { position: absolute; left: 0; top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; }
+  .ledger .works li::before { content: '+'; color: var(--origin); }
+  .ledger .hard li::before { content: '\2013'; color: var(--hype); }
+  .ledger li b { color: var(--ink-accent); font-weight: 600; }
+  @media (max-width: 620px) { .ledger { grid-template-columns: 1fr; } }
+
+  /* ---- big stat inline ---- */
+  .bigstat { display: flex; gap: 28px; flex-wrap: wrap; margin: 30px 0; }
+  .bigstat .s { flex: 1; min-width: 140px; }
+  .bigstat .n {
+    font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(36px, 7vw, 52px);
+    line-height: 1; color: var(--ink-accent); letter-spacing: -0.02em;
+  }
+  .bigstat .n .unit { font-size: 0.5em; color: var(--muted); }
+  .bigstat .cap { font-size: 13.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+
+  /* ---- section divider ---- */
+  .div-rule { border: none; border-top: 1px solid var(--rule); margin: 8px 0 0; }
+
+  /* ---- sources ---- */
+  section.sources { padding: 56px 0 30px; border-top: 1px solid var(--rule); margin-top: 50px; }
+  section.sources h3 {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 22px; font-weight: 600;
+  }
+  .src-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; }
+  .src-grid a {
+    display: block; padding: 9px 0; font-size: 14px; color: var(--muted); text-decoration: none;
+    border-top: 1px solid var(--border); line-height: 1.4;
+  }
+  .src-grid a:first-child, .src-grid a:nth-child(2) { border-top: none; }
+  .src-grid a:hover { color: var(--today); }
+  .src-grid a .t { color: var(--ink-accent); font-weight: 500; }
+  @media (max-width: 620px) { .src-grid { grid-template-columns: 1fr; } .src-grid a:nth-child(2){ border-top: 1px solid var(--border);} }
+
+  footer.foot {
+    padding: 30px 0 70px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--faint); line-height: 1.7;
+  }
+  footer.foot b { color: var(--muted); font-weight: 500; }
+
+  /* reveal */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<nav>
+  <span class="nav-logo">AI FOUNDATIONS // THE STORY</span>
+  <div class="nav-links">
+    <a href="#ch1">The Idea</a>
+    <a href="#ch2">The Spring</a>
+    <a href="#ch3">The Reframe</a>
+    <a href="#ch4">The Plumbing</a>
+    <a href="#ch5">The Wars</a>
+    <a href="#ch6">What Works</a>
+    <a href="#ch7">Today</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">No. 04 — Agentic Frameworks &amp; Systems &nbsp;·&nbsp; <b>The reality, not the concept</b></div>
+    <h1 class="title">Give it a goal<br>and walk away</h1>
+    <p class="deck">For a few weeks in 2023, it looked like software could hire itself. The real story of agentic AI is what happened after the dream broke — and the unglamorous engineering that turned a viral fantasy into production infrastructure.</p>
+    <div class="byline">
+      <span>A field guide to where agents actually sit</span>
+      <span class="dot">·</span>
+      <span>2022 &rarr; 2026</span>
+      <span class="dot">·</span>
+      <span>~22 min read</span>
+    </div>
+  </div>
+</header>
+
+<div class="timeline">
+  <div class="tl-item o"><div class="tl-dot"></div><div class="tl-yr">Oct 2022</div><div class="tl-lab">ReAct: reason + act in a loop</div></div>
+  <div class="tl-item h"><div class="tl-dot"></div><div class="tl-yr">Spring 2023</div><div class="tl-lab">AutoGPT &amp; BabyAGI go viral</div></div>
+  <div class="tl-item c"><div class="tl-dot"></div><div class="tl-yr">2024</div><div class="tl-lab">Workflows &amp; design patterns</div></div>
+  <div class="tl-item c"><div class="tl-dot"></div><div class="tl-yr">Nov 2024 &rarr; '25</div><div class="tl-lab">MCP &amp; A2A: the plumbing</div></div>
+  <div class="tl-item t"><div class="tl-dot"></div><div class="tl-yr">Jun 2025</div><div class="tl-lab">The architecture wars</div></div>
+  <div class="tl-item t"><div class="tl-dot"></div><div class="tl-yr">2026</div><div class="tl-lab">Harnesses &amp; production</div></div>
+</div>
+
+<main>
+<!-- ============ CHAPTER 1 ============ -->
+<section class="chapter origin" id="ch1">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">1</span> <span>The Idea</span> <span class="era">/ October 2022</span></div>
+    <h2 class="ch-title">Before the agent, there was a loop</h2>
+
+    <p>The whole field rests on a deceptively small idea: let a language model <em>think out loud</em> and <em>act</em> in the same breath, then feed it back what happened.</p>
+
+    <p>In October 2022 — a month before ChatGPT existed — a Princeton PhD student named <strong>Shunyu Yao</strong> and his co-authors posted a paper called <a class="ref" href="https://huggingface.co/papers/2210.03629">ReAct: Synergizing Reasoning and Acting in Language Models</a>. Until then, two abilities had been studied separately: a model could <em>reason</em> (chain-of-thought) or it could <em>generate an action plan</em>. ReAct interleaved them. At each step the model writes a thought (<span class="mono-term">why</span>), chooses an action (<span class="mono-term">what</span>), and reads back an observation (<span class="mono-term">result</span>) — then loops. Reasoning keeps the plan honest; actions let it reach outside its own context to a search engine, a calculator, an API.</p>
+
+    <p>That <span class="lead-in">reason &rarr; act &rarr; observe</span> cycle is still the beating heart of every agent shipped today. It's worth saying plainly, because the marketing has buried it: an "AI agent" is just a language model placed in a loop, given tools, and allowed to decide its own next step. Everything else — frameworks, protocols, multi-agent choreography — is scaffolding around that single primitive.</p>
+
+    <blockquote class="origin">
+      <p>An agent is a model running in a loop with tools, choosing for itself when the work is done.</p>
+      <cite>The one-sentence definition that survived four years of hype</cite>
+    </blockquote>
+
+    <p>ReAct was modest and academic. It would take a far bigger model — and a far louder moment — to convince the world that this loop could replace a junior employee.</p>
+  </div>
+</section>
+<hr class="div-rule">
+
+<!-- ============ CHAPTER 2 ============ -->
+<section class="chapter hype" id="ch2">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">2</span> <span>The Spring</span> <span class="era">/ March–April 2023</span></div>
+    <h2 class="ch-title">The fantasy of the autonomous employee</h2>
+
+    <p>On <strong>March 14, 2023</strong>, OpenAI released GPT-4. Sixteen days later, a game developer named <strong>Toran Bruce Richards</strong> pushed an experiment called <strong>AutoGPT</strong> to GitHub. The pitch was intoxicating: give the AI a goal in plain English, then walk away and come back to finished work. No prompts. No hand-holding. Not a chatbot — an <em>employee</em>.</p>
+
+    <p>It spread like nothing the developer world had seen. AutoGPT cleared <strong>100,000 GitHub stars</strong> within weeks, becoming the top trending repository on the platform. Days later a venture investor, <strong>Yohei Nakajima</strong>, shipped <strong>BabyAGI</strong> — a cleaner take built from three cooperating roles: one agent to create tasks, one to prioritize them, one to execute. He had coded it, fittingly, by having GPT-4 help write it. For a few weeks in the spring of 2023, it genuinely felt like software had learned to hire itself.</p>
+
+    <p>Then people actually ran them.</p>
+
+    <p>The agents looped. They set themselves vague sub-goals, chased perfection, and never declared victory. They hallucinated steps, then built on the hallucinations. Small per-step error rates <strong>compounded</strong> across long task chains until the output was nonsense — and every iteration burned tokens at an alarming rate. AutoGPT's own team later found the elaborate vector-database memory most clones bolted on was overkill, and ripped it out for a plain local file. The promise of "walk away" collided with the reality that no one could trust what they'd come back to.</p>
+
+    <div class="callout">
+      <div class="k">The quiet retirement</div>
+      <p>By mid-2024 the autonomous-agent boom had cooled. Nakajima archived BabyAGI in September 2024, relaunching it as an explicit research sandbox. AgentGPT's parent pivoted to web scraping. AutoGPT itself was rewritten into a visual workflow builder — useful, but, as one retrospective put it, a completely different product from the one that earned those hundred thousand stars.</p>
+    </div>
+
+    <p>The lesson that outlived the hype is the one every generation of technology relearns: <strong>the useful thing that emerges is never the thing that was promised.</strong> AutoGPT didn't deliver an autonomous worker; it delivered a workflow builder. BabyAGI didn't deliver autonomy; it delivered dozens of academic papers and an education for a generation of builders. What broke in the spring of 2023 wasn't the idea of the loop — it was the belief that you could leave the loop unsupervised.</p>
+  </div>
+</section>
+<hr class="div-rule">
+
+<!-- ============ CHAPTER 3 ============ -->
+<section class="chapter craft" id="ch3">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">3</span> <span>The Reframe</span> <span class="era">/ 2024</span></div>
+    <h2 class="ch-title">From &ldquo;autonomous agent&rdquo; to &ldquo;agentic workflow&rdquo;</h2>
+
+    <p>The recovery didn't come from a bigger model. It came from a change of vocabulary — and a change of ambition.</p>
+
+    <p>In March 2024, <strong>Andrew Ng</strong> gave the field a more honest frame. Instead of selling fully autonomous agents, he named four concrete <strong>agentic design patterns</strong> that reliably improved results: <strong>Reflection</strong> (the model critiques and revises its own output), <strong>Tool Use</strong> (calling out to code, search, APIs), <strong>Planning</strong> (decomposing a goal into steps), and <strong>Multi-agent collaboration</strong> (specialized roles checking each other). The shift was subtle but decisive: stop chasing a magical autonomous worker, and start composing a <em>workflow</em> in which the model takes several deliberate passes instead of one.</p>
+
+    <p>Ng's demonstration of choice was telling — <strong>code generation</strong>. Code has objective feedback: it runs or it doesn't, tests pass or fail. That made it the perfect proving ground for agentic patterns, and it's why coding became the first place agents genuinely worked. The vagueness that doomed "book me a vacation" was replaced by tasks with a verifier attached.</p>
+
+    <blockquote class="craft">
+      <p>Reflection, tool use, planning, collaboration — not a robot employee, but a disciplined workflow with the model in the loop.</p>
+      <cite>The 2024 reframe that pulled agents out of the trough</cite>
+    </blockquote>
+
+    <p>Underneath the vocabulary, an infrastructure layer was maturing too. Back in <strong>October 2022</strong>, an ML engineer named <strong>Harrison Chase</strong> had pushed a side project called <strong>LangChain</strong> — a library to kill the boilerplate of wiring models to data and tools. When ChatGPT launched weeks later, it became, briefly, the fastest-growing open-source project on GitHub, and the company raised $35M from Sequoia and Benchmark. But LangChain's original <span class="mono-term">AgentExecutor</span> — one rigid class that ran the autonomous loop — turned out to be exactly the wrong abstraction for production. Developers wanted control, not magic.</p>
+
+    <p>So the team built <strong>LangGraph</strong>: instead of a black-box loop, you model the agent as an explicit <em>graph</em> of steps and state, with checkpoints, memory, and human-in-the-loop pauses you can actually inspect. It was an admission, encoded in software, of the spring's hard lesson — that real agents need structure around the loop, not faith in it. CrewAI, Microsoft's AutoGen, and others staked out the same territory: give the loop guardrails, roles, and recovery, and it starts to hold up.</p>
+  </div>
+</section>
+<hr class="div-rule">
+
+<!-- ============ CHAPTER 4 ============ -->
+<section class="chapter craft" id="ch4">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">4</span> <span>The Plumbing</span> <span class="era">/ Nov 2024 &rarr; 2025</span></div>
+    <h2 class="ch-title">The boring standards that made agents real</h2>
+
+    <p>An agent is only as capable as the tools it can reach. Through 2024, connecting a model to Slack, a database, GitHub, or a CRM meant writing a bespoke connector for every model-and-tool pairing — an <span class="mono-term">M&times;N</span> integration nightmare. The fix arrived as infrastructure so unglamorous it's easy to miss how much it mattered.</p>
+
+    <p><span class="lead-in">MCP.</span> In November 2024, Anthropic open-sourced the <strong>Model Context Protocol</strong>. Its origin story is refreshingly mundane: a developer, David Soria Parra, was tired of copying code back and forth between Claude Desktop and his IDE. MCP standardized that connection — one protocol any model could speak to any tool, widely described as <em>&ldquo;USB-C for AI.&rdquo;</em> The adoption curve was almost unheard-of for a standard. OpenAI added support across its products in March 2025; Google followed with Gemini in April. By early 2026, MCP was clearing tens of millions of SDK downloads a month with well over ten thousand community servers — and Anthropic had handed it to a vendor-neutral home, the Linux Foundation's new <strong>Agentic AI Foundation</strong>, in December 2025, with AWS, Google, Microsoft, OpenAI, Block, and Bloomberg all signed on.</p>
+
+    <p><span class="lead-in">A2A.</span> MCP connects an agent to its tools. It says nothing about how two <em>agents</em> — built by different vendors, on different clouds — talk to each other. That's the gap <strong>Agent2Agent</strong> set out to fill. Google announced A2A in April 2025 with fifty-plus partners and donated it to the Linux Foundation by June. Its core idea is the <strong>Agent Card</strong>: a small published manifest where an agent advertises what it can do, so others can discover it, authenticate, and hand off a task. The two protocols are complementary, not rival — MCP is agent-to-tool, A2A is agent-to-agent — and a 2025 extension, AP2, even bolted a payments layer onto A2A so agents could transact.</p>
+
+    <div class="callout">
+      <div class="k">An honest footnote on hype</div>
+      <p>Not every standard wins equally. MCP became the genuine de-facto layer — embedded everywhere, debated constantly. A2A's mindshare has been more uneven; some practitioners argued through 2025 that it had quietly faded next to MCP, even as the official count of supporting organizations passed 150. The reality is that agent-to-agent interop only becomes a <em>blocking</em> problem once you have real multi-agent systems in production — and most teams aren't there yet.</p>
+    </div>
+
+    <p>The deeper point: standardizing the plumbing did what every successful platform shift does. It let builders stop re-inventing connectors and start building on top. But it also created a new surface for trouble — by early 2026, security researchers had filed dozens of CVEs against MCP implementations, a reminder that &ldquo;universal connector&rdquo; also means &ldquo;universal attack surface.&rdquo;</p>
+  </div>
+</section>
+<hr class="div-rule">
+
+<!-- ============ CHAPTER 5 ============ -->
+<section class="chapter today" id="ch5">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">5</span> <span>The Architecture Wars</span> <span class="era">/ June 2025</span></div>
+    <h2 class="ch-title">One question, two giants, opposite answers</h2>
+
+    <p>In the span of about a day in June 2025, two of the most respected teams in the field published essays with directly contradictory titles — and the disagreement turned out to be the most clarifying thing that happened to agent architecture all year.</p>
+
+    <div class="faceoff">
+      <div class="side a">
+        <div class="who">Cognition (makers of Devin)</div>
+        <div class="claim">&ldquo;Don't Build Multi-Agents&rdquo;</div>
+        <p>Walden Yan's argument: parallel sub-agents make independent decisions, and independent decisions on the same problem produce conflicting, incoherent results. Keep it a single thread. Reliability comes from one agent with carefully managed context.</p>
+      </div>
+      <div class="vs">— published the same week —</div>
+      <div class="side b">
+        <div class="who">Anthropic</div>
+        <div class="claim">&ldquo;How we built our multi-agent research system&rdquo;</div>
+        <p>A lead agent spawns sub-agents, each with its own clean context window and a self-contained task — they don't even know each other exist. For open-ended research, this beat a single agent by a wide margin, at roughly fifteen times the token cost.</p>
+      </div>
+    </div>
+
+    <p>Read closely, the two camps weren't really fighting — they were describing different jobs. The hinge is a distinction that now organizes the whole discipline: <strong>reading parallelizes; writing does not.</strong> Research is mostly reading — you can fan out a dozen sub-agents to gather sources in parallel and merge the findings. Coding is mostly writing — sub-agents editing the same codebase make conflicting changes that don't cleanly merge, so a single coherent thread wins. Anthropic's research system and Cognition's coding agent reached opposite architectures because they sit on opposite sides of that line.</p>
+
+    <blockquote class="today">
+      <p>Both teams converged on the same root cause of failure — and gave it a name: context engineering.</p>
+      <cite>The real takeaway of the architecture wars</cite>
+    </blockquote>
+
+    <p>That phrase — <strong>context engineering</strong>, coined in Cognition's post — is the most important idea to come out of 2025. Even a brilliant model fails if you feed it the wrong context: too much, too little, stale, or poorly framed. A Berkeley team drove the point home with a taxonomy of <strong>fourteen distinct failure modes</strong> in multi-agent systems, most of them not reasoning failures at all but breakdowns in how context and coordination were managed. The conclusion the field reached, after two years of blaming the models: <em>most agent failures are engineering failures.</em></p>
+  </div>
+</section>
+<hr class="div-rule">
+
+<!-- ============ CHAPTER 6 ============ -->
+<section class="chapter origin" id="ch6">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">6</span> <span>What Actually Works</span> <span class="era">/ The coding proof</span></div>
+    <h2 class="ch-title">Where the loop finally held</h2>
+
+    <p>If you want to know whether agents are real, don't read a survey — look at the one domain with an honest scoreboard. <strong>SWE-bench Verified</strong> is a benchmark of 500 human-reviewed real GitHub issues: not &ldquo;write a sorting function,&rdquo; but &ldquo;navigate a forty-thousand-line codebase, find what broke, and produce a patch that passes the project's own tests.&rdquo; It's about as close to a junior engineer's actual job as a benchmark gets.</p>
+
+    <div class="progression">
+      <div class="head">
+        <div class="lab">SWE-bench Verified &mdash; the arc</div>
+        <div class="sub">Share of real GitHub issues resolved end-to-end, best reported systems</div>
+      </div>
+      <div class="bar-row"><span class="when">Oct 2023</span><div class="bar-track"><div class="bar-fill" style="width:2%"></div></div><span class="pct">1.96%</span></div>
+      <div class="bar-row"><span class="when">Early 2024</span><div class="bar-track"><div class="bar-fill" style="width:14%"></div></div><span class="pct">~14%</span></div>
+      <div class="bar-row"><span class="when">Mid 2024</span><div class="bar-track"><div class="bar-fill" style="width:53%"></div></div><span class="pct">~53%</span></div>
+      <div class="bar-row"><span class="when">2025</span><div class="bar-track"><div class="bar-fill" style="width:71%"></div></div><span class="pct">~71%</span></div>
+      <div class="bar-row"><span class="when">Spring 2026</span><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><span class="pct">~80%+</span></div>
+      <div class="foot">Figures vary by scaffold, model, and tracker — the agent harness around the model often matters as much as the model itself. The shape of the curve is the point.</div>
+    </div>
+
+    <p>That curve is the single most convincing piece of evidence that this isn't 2023 again. In under three years, the best systems went from solving <em>one in fifty</em> real engineering tasks to solving <em>four in five</em>. Anthropic has said the majority of code written inside the company is now produced by its own agent, Claude Code — a tell that the people building the models are betting their own workflow on them.</p>
+
+    <div class="bigstat">
+      <div class="s"><div class="n">1.96<span class="unit">%</span></div><div class="cap">Best SWE-bench Verified score, late 2023</div></div>
+      <div class="s"><div class="n">~80<span class="unit">%+</span></div><div class="cap">Top systems on the same benchmark, 2026</div></div>
+      <div class="s"><div class="n">&lt;3<span class="unit"> yrs</span></div><div class="cap">to cross that gap</div></div>
+    </div>
+
+    <p>What's quietly interesting is the <em>shape</em> of the winning products — and how thoroughly they abandoned the 2023 dream. They don't run unsupervised. They split along an <strong>autonomy spectrum</strong>: at one end, IDE-native, human-in-every-loop tools like <strong>Cursor</strong>, where you watch and approve as you go; at the other, async &ldquo;assign-and-review&rdquo; agents like <strong>Devin</strong> that work for minutes to hours and return a pull request for a human to vet. <strong>Claude Code</strong> and OpenAI's <strong>Codex</strong> sit between, terminal-first with explicit approval gates. None of them say &ldquo;walk away.&rdquo; Every one of them keeps a human at a checkpoint. The market discovered that <em>supervised</em> autonomy is the product — and most serious teams now run two or three of these tools side by side, matched to the task.</p>
+  </div>
+</section>
+<hr class="div-rule">
+
+<!-- ============ CHAPTER 7 ============ -->
+<section class="chapter today" id="ch7">
+  <div class="wrap">
+    <div class="ch-eyebrow"><span class="num">7</span> <span>Where It Sits Today</span> <span class="era">/ 2026</span></div>
+    <h2 class="ch-title">From prompts to harnesses</h2>
+
+    <p>Step back and the four-year story has a clean through-line: each time a paradigm couldn't deliver, the field <em>relocated the rigor</em> somewhere harder.</p>
+
+    <p><strong>Prompt engineering</strong> (2022&ndash;24) was the first home for that rigor — Andrej Karpathy's quip that the hottest new programming language was English. Then single prompts stopped being enough, and rigor moved to <strong>context engineering</strong> (2025) — deciding what knowledge, history, and tool definitions to assemble into the window at each step. And as agents began running autonomously for long stretches, it moved again, to what 2026 calls <strong>harness engineering</strong>: building the whole environment around the model — the execution loop, the retries and recovery, the guardrails and linters, the verification, the memory, the human checkpoints. The slogan that captures the era is blunt: <em>agents aren't hard; the harness is hard.</em> If the model is a CPU and the context window is RAM, the harness is the operating system.</p>
+
+    <p>So how state-of-the-art is all this, honestly? The fairest answer is a balance sheet, not a verdict.</p>
+
+    <div class="ledger">
+      <div class="col works">
+        <h4>What genuinely works now</h4>
+        <ul>
+          <li><b>Verifiable, long-horizon work.</b> Coding, research, SRE, advanced support — anywhere a result can be checked — now gets strong first drafts from agents.</li>
+          <li><b>The plumbing is solved.</b> MCP for tools, A2A for agent hand-offs, both vendor-neutral. Connecting agents to the world is no longer bespoke.</li>
+          <li><b>Supervised autonomy.</b> Human-in-the-loop checkpoints turned a flaky demo into something teams will actually run in production.</li>
+          <li><b>The model is rarely the bottleneck.</b> Frontier models cleared the capability bar; the remaining problems are systems problems.</li>
+        </ul>
+      </div>
+      <div class="col hard">
+        <h4>What's still genuinely hard</h4>
+        <ul>
+          <li><b>Integration, not intelligence.</b> Reports put system integration — secure access to real production data — as the top blocker, ahead of model quality.</li>
+          <li><b>Security lags adoption.</b> Only a small minority of agents reach production with full security sign-off; impersonation and credential attacks are climbing.</li>
+          <li><b>Reliability over length.</b> Errors still compound on long runs; multi-agent setups add coordination failure modes of their own.</li>
+          <li><b>Uneven ROI.</b> Analysts warn a large share of agentic projects risk cancellation before they pay off. Pilots are easy; durable value is not.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>The enterprise mood in 2026 reflects exactly that split. Adoption is no longer the question — surveys find nearly every large enterprise planning to expand agent use, and analysts expecting a big share of business applications to embed task-specific agents within the year. But the conversation has moved decisively from <em>can we build an agent</em> to <em>can we operate one reliably, securely, and at scale.</em> The hard part isn't the demo anymore. It's the second Tuesday in production.</p>
+
+    <blockquote class="today">
+      <p>The autonomous employee never showed up. What arrived instead was a disciplined, supervised, well-engineered system — and that turned out to be the more valuable thing.</p>
+      <cite>The quiet punchline of the agentic era</cite>
+    </blockquote>
+
+    <p>That's the real arc, and it's worth holding onto as the next topic's worth of hype arrives. The viral fantasy of 2023 was wrong about the destination but right about the loop. Everything since — the patterns, the frameworks, the protocols, the harnesses — has been the field doing the unglamorous work of making that loop trustworthy. Give it a goal and walk away was always the wrong instruction. <strong>Give it a goal, give it tools, and stay close</strong> is the one that shipped.</p>
+  </div>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<section class="sources">
+  <div class="wrap">
+    <h3>Sources &amp; further reading</h3>
+    <div class="src-grid">
+      <a href="https://huggingface.co/papers/2210.03629"><span class="t">ReAct: Synergizing Reasoning and Acting</span> &mdash; Yao et al., 2022</a>
+      <a href="https://en.wikipedia.org/wiki/AutoGPT"><span class="t">AutoGPT</span> &mdash; history &amp; the 2023 spring</a>
+      <a href="https://www.sequoiacap.com/podcast/training-data-harrison-chase/"><span class="t">Harrison Chase on the orchestration layer</span> &mdash; Sequoia</a>
+      <a href="https://x.com/AndrewYNg/status/1773393357022298617"><span class="t">Four agentic design patterns</span> &mdash; Andrew Ng, 2024</a>
+      <a href="https://en.wikipedia.org/wiki/Model_Context_Protocol"><span class="t">Model Context Protocol</span> &mdash; origin &amp; spec</a>
+      <a href="https://www.pento.ai/blog/a-year-of-mcp-2025-review"><span class="t">A year of MCP</span> &mdash; adoption timeline</a>
+      <a href="https://en.wikipedia.org/wiki/Agent2Agent"><span class="t">Agent2Agent (A2A)</span> &mdash; protocol &amp; governance</a>
+      <a href="https://blog.langchain.com/how-and-when-to-build-multi-agent-systems/"><span class="t">How &amp; when to build multi-agent systems</span> &mdash; LangChain</a>
+      <a href="https://www.philschmid.de/single-vs-multi-agents"><span class="t">Single vs multi-agent</span> &mdash; the architecture wars, explained</a>
+      <a href="https://awesomeagents.ai/leaderboards/swe-bench-coding-agent-leaderboard/"><span class="t">SWE-bench coding-agent leaderboard</span> &mdash; 2026</a>
+      <a href="https://bits-bytes-nn.github.io/insights/agentic-ai/2026/04/05/evolution-of-ai-agentic-patterns-en.html"><span class="t">From prompts to harnesses</span> &mdash; four years of patterns</a>
+      <a href="https://www.arcade.dev/blog/5-takeaways-2026-state-of-ai-agents-claude/"><span class="t">State of AI Agents 2026</span> &mdash; enterprise reality</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <b>AI Foundations Bootcamp &mdash; The Story, No. 04: Agentic Frameworks &amp; Systems.</b><br>
+    Deliverable #2 &middot; A researched narrative companion to the Agentic Systems bootcamp.<br>
+    Reflects the field as of mid-2026. Benchmark and adoption figures vary by source and method; treat them as the shape of a trend, not precise measurements.
+  </div>
+</footer>
+</main>
+
+<script>
+  // reading progress
+  const prog = document.getElementById('progress');
+  function onScroll() {
+    const h = document.documentElement;
+    const scrolled = h.scrollTop / (h.scrollHeight - h.clientHeight);
+    prog.style.width = Math.min(100, Math.max(0, scrolled * 100)) + '%';
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // scroll reveal
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const blocks = document.querySelectorAll('section.chapter .wrap > *');
+    blocks.forEach(b => b.classList.add('reveal'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    blocks.forEach(b => io.observe(b));
+  }
+</script>
+</body>
+</html>

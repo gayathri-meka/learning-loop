@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Measure Problem — How LLM Evaluation Became the Discipline That Decides Who Ships</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee; --surface: #eceae4; --surface2: #e2e0d9; --border: #d0cdc4; --rule: #cbc6b9;
+    --text: #211e1a; --ink: #2a2722; --muted: #6f665a; --faint: #9b9384;
+    --accent: #2a6b3c;
+    --e1: #1a7a5e; /* origins green */
+    --e2: #7a6200; /* benchmark amber */
+    --e3: #1a5c8a; /* arena blue */
+    --e4: #c0450e; /* judge/agent orange */
+    --code-bg: #211e1a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before { animation: none !important; transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 18px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+
+  /* reading progress */
+  .progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: var(--accent); z-index: 200; transition: width 0.1s linear; }
+
+  /* top label */
+  .toplabel { position: fixed; top: 0; left: 0; right: 0; height: 46px; background: rgba(245,243,238,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 150; display: flex; align-items: center; padding: 0 26px; }
+  .toplabel span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .toplabel b { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 28px; }
+
+  /* hero */
+  header.hero { padding: 150px 0 70px; border-bottom: 1px solid var(--rule); }
+  .hero .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); margin-bottom: 30px; }
+  .hero .kicker b { color: var(--accent); font-weight: 600; }
+  h1.title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(42px, 8vw, 78px); line-height: 1.02; letter-spacing: -0.025em; color: var(--ink); margin-bottom: 34px; }
+  h1.title em { font-style: italic; font-weight: 400; }
+  .hero .deck { font-family: 'Fraunces', serif; font-weight: 300; font-style: italic; font-size: clamp(20px, 3.2vw, 26px); line-height: 1.48; color: var(--muted); margin-bottom: 40px; }
+  .hero .byline { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--faint); line-height: 1.9; border-top: 1px solid var(--border); padding-top: 22px; }
+  .hero .byline b { color: var(--muted); font-weight: 500; }
+
+  /* chapter */
+  .chapter { padding: 72px 0 0; }
+  .chap-head { margin-bottom: 30px; }
+  .chap-num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; display: inline-block; }
+  .e1 .chap-num { color: var(--e1); } .e2 .chap-num { color: var(--e2); } .e3 .chap-num { color: var(--e3); } .e4 .chap-num { color: var(--e4); } .e0 .chap-num { color: var(--accent); }
+  .chap-title { font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(30px, 5vw, 44px); line-height: 1.08; letter-spacing: -0.015em; color: var(--ink); }
+
+  .chapter p { margin-bottom: 24px; font-size: 18px; line-height: 1.78; }
+  .chapter p.drop::first-letter { font-family: 'Fraunces', serif; font-weight: 400; float: left; font-size: 76px; line-height: 0.82; padding: 6px 12px 0 0; color: var(--ink); }
+  .chapter strong { font-weight: 600; color: var(--ink); }
+  .chapter em { font-style: italic; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.84em; background: var(--surface); padding: 1px 6px; border-radius: 4px; color: var(--ink); }
+  a.ref { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border); }
+  a.ref:hover { border-color: var(--accent); }
+
+  /* pull quote */
+  .pull { margin: 40px 0; padding: 4px 0 4px 28px; border-left: 3px solid var(--accent); }
+  .e1 .pull { border-color: var(--e1); } .e2 .pull { border-color: var(--e2); } .e3 .pull { border-color: var(--e3); } .e4 .pull { border-color: var(--e4); }
+  .pull p { font-family: 'Fraunces', serif; font-weight: 300; font-style: italic; font-size: clamp(22px, 3.4vw, 28px); line-height: 1.4; color: var(--ink); margin: 0; }
+
+  /* inline aside */
+  .aside { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 26px; margin: 34px 0; }
+  .aside .k { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 10px; }
+  .aside p { font-size: 16px; line-height: 1.65; color: var(--muted); margin: 0; }
+  .aside p + p { margin-top: 12px; }
+
+  /* era timeline */
+  .timeline { margin: 44px 0; padding-left: 4px; }
+  .tl-item { position: relative; padding: 0 0 28px 36px; border-left: 2px solid var(--rule); }
+  .tl-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .tl-dot { position: absolute; left: -8px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 3px solid var(--accent); }
+  .tl-item.c1 .tl-dot { border-color: var(--e1); } .tl-item.c2 .tl-dot { border-color: var(--e2); }
+  .tl-item.c3 .tl-dot { border-color: var(--e3); } .tl-item.c4 .tl-dot { border-color: var(--e4); }
+  .tl-year { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .tl-item.c1 .tl-year { color: var(--e1); } .tl-item.c2 .tl-year { color: var(--e2); }
+  .tl-item.c3 .tl-year { color: var(--e3); } .tl-item.c4 .tl-year { color: var(--e4); }
+  .tl-what { font-family: 'Fraunces', serif; font-size: 19px; color: var(--ink); margin-bottom: 3px; }
+  .tl-desc { font-size: 15px; color: var(--muted); line-height: 1.55; }
+
+  /* saturation bars */
+  .satbars { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px 28px 24px; margin: 40px 0; position: relative; }
+  .satbars .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 22px; }
+  .satrow { display: flex; align-items: center; margin-bottom: 14px; }
+  .satrow:last-child { margin-bottom: 0; }
+  .satname { width: 130px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink); flex-shrink: 0; }
+  .satname small { display: block; color: var(--faint); font-size: 10.5px; }
+  .sattrack { flex: 1; height: 24px; background: var(--surface2); border-radius: 6px; position: relative; overflow: hidden; }
+  .satfill { height: 100%; border-radius: 6px; width: 0; transition: width 1.3s cubic-bezier(.2,.7,.2,1); }
+  .satval { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: #fff; }
+  .satzone { position: absolute; right: 0; top: 44px; bottom: 24px; width: 12%; background: repeating-linear-gradient(45deg, rgba(192,69,14,0.08), rgba(192,69,14,0.08) 5px, transparent 5px, transparent 10px); border-left: 1.5px dashed rgba(192,69,14,0.4); pointer-events: none; }
+  .satzone-label { position: absolute; right: 28px; top: 22px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--e4); letter-spacing: 0.05em; }
+
+  /* compare-against strip */
+  .compare { margin: 44px 0; }
+  .compare .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 18px; text-align: center; }
+  .cmp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cmp-card { border: 1px solid var(--border); border-radius: 11px; padding: 16px 14px; background: var(--surface); text-align: center; }
+  .cmp-era { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; margin-bottom: 8px; }
+  .cmp-card.k1 .cmp-era { color: var(--e1); } .cmp-card.k2 .cmp-era { color: var(--e2); } .cmp-card.k3 .cmp-era { color: var(--e3); } .cmp-card.k4 .cmp-era { color: var(--e4); }
+  .cmp-ans { font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink); line-height: 1.15; margin-bottom: 6px; }
+  .cmp-sub { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  @media (max-width: 680px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* reliability gap viz */
+  .gapviz { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin: 40px 0; }
+  .gapviz .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 22px; }
+  .gaprow { display: flex; align-items: center; margin-bottom: 16px; }
+  .gaplabel { width: 150px; flex-shrink: 0; }
+  .gaplabel b { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink); }
+  .gaplabel small { display: block; font-size: 12px; color: var(--muted); }
+  .gaptrack { flex: 1; height: 30px; background: var(--surface2); border-radius: 6px; overflow: hidden; }
+  .gapfill { height: 100%; width: 0; border-radius: 6px; transition: width 1.3s cubic-bezier(.2,.7,.2,1); display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #fff; }
+  .gapnote { font-size: 14.5px; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+  /* ledger */
+  .ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 40px 0; }
+  .ledger-col { border: 1px solid var(--border); border-radius: 14px; padding: 24px; background: var(--surface); }
+  .ledger-col h4 { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; }
+  .ledger-col.solved h4 { color: var(--e1); }
+  .ledger-col.hard h4 { color: var(--e4); }
+  .ledger-col ul { list-style: none; }
+  .ledger-col li { font-size: 15px; line-height: 1.5; padding: 9px 0 9px 24px; position: relative; color: var(--muted); border-top: 1px solid var(--border); }
+  .ledger-col li:first-child { border-top: none; }
+  .ledger-col li::before { position: absolute; left: 0; top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; }
+  .ledger-col.solved li::before { content: '+'; color: var(--e1); }
+  .ledger-col.hard li::before { content: '\2013'; color: var(--e4); }
+  .ledger-col li b { color: var(--ink); font-weight: 600; }
+  @media (max-width: 680px) { .ledger { grid-template-columns: 1fr; } }
+
+  hr.sec { border: none; border-top: 1px solid var(--rule); margin: 64px 0 0; }
+
+  footer.foot { padding: 70px 0 90px; margin-top: 56px; border-top: 1px solid var(--rule); }
+  footer.foot .fnote { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--faint); line-height: 1.8; }
+  footer.foot .fnote b { color: var(--muted); font-weight: 500; }
+  .srcs { margin-top: 24px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--faint); line-height: 1.85; }
+  .srcs b { color: var(--muted); display: block; margin-bottom: 6px; letter-spacing: 0.08em; }
+
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="toplabel"><span>AI Foundations · No. 05 — <b>The Story of LLM Evaluation</b></span></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Deliverable #2 &nbsp;·&nbsp; <b>The Story</b> &nbsp;·&nbsp; A researched long-read</div>
+    <h1 class="title">The measure<br>problem</h1>
+    <p class="deck">For twenty years, every advance in language AI ran into the same wall: how do you grade an answer when there's no single right one? This is the story of how the field kept changing what it compared against — and how evaluation went from an afterthought to the discipline that quietly decides who ships.</p>
+    <div class="byline">
+      <b>Reading time</b> ~14 min &nbsp;·&nbsp; <b>Companion to</b> the LLM Evaluation bootcamp<br>
+      <b>Arc</b> BLEU &rarr; the benchmark era &rarr; the Arena &rarr; the judge &rarr; production &rarr; agents &rarr; the moat
+    </div>
+  </div>
+</header>
+
+<!-- ===================== CHAPTER I ===================== -->
+<section class="chapter e1">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter I — Origins</span>
+      <h2 class="chap-title">When the answer was a word count</h2>
+    </div>
+    <p class="drop">Before large language models, evaluating machine-generated text had a tidy, almost mechanical answer. If a system translated a sentence or summarized a paragraph, you compared its output to a human-written <em>reference</em> and counted how many words and phrases overlapped. More overlap, better score. The two metrics that defined this era were <strong>BLEU</strong>, introduced in 2002 for machine translation, and <strong>ROUGE</strong>, introduced in 2004 for summarization. Both were n-gram overlap measures: fast, cheap, fully automatic, and — for their tasks — good enough to drive a decade of progress.</p>
+    <p>The trick worked because those tasks had something precious: a known right answer to compare against. A good translation of a French sentence looks a lot like the reference translation. But the moment you ask a model to do something open-ended — explain a concept, write an email, answer a question five different valid ways — the reference disappears. Two answers can share almost no words and both be excellent. Count overlap and you punish the model for phrasing things differently than your one reference did.</p>
+    <div class="pull">
+      <p>Every era of evaluation is a new answer to one question: <em>what do we compare the output against?</em></p>
+    </div>
+    <p>That question is the spine of this whole story. BLEU and ROUGE answered it with <em>a fixed reference</em>. It was the right answer for translation and the wrong answer for everything language models would soon be asked to do. As models grew more general, the field needed a new thing to measure against — and it would spend the next twenty years inventing one, discarding it, and inventing the next.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER II ===================== -->
+<section class="chapter e2">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter II — The Benchmark Era</span>
+      <h2 class="chap-title">The scoreboard, and how it broke</h2>
+    </div>
+    <p class="drop">If you can't compare to a single reference, compare to a <em>battery of tasks</em>. That was the next answer, and it produced the most recognizable artifact in AI: the leaderboard. In 2018, <strong>GLUE</strong> bundled nine language-understanding tasks — sentiment, entailment, question answering — into one benchmark with one headline number. A year later <strong>SuperGLUE</strong> raised the difficulty. In 2020, <strong>MMLU</strong> went enormous: 57 subjects from elementary math to professional law, designed to test breadth of knowledge no narrow task could. Stanford's <strong>HELM</strong> and Google's <strong>BIG-bench</strong> pushed for holistic, many-scenario evaluation. For a few years, the leaderboard <em>was</em> the field's scoreboard.</p>
+
+    <div class="timeline">
+      <div class="tl-item c1">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2002 · 2004</div>
+        <div class="tl-what">BLEU &amp; ROUGE</div>
+        <div class="tl-desc">N-gram overlap against a reference. Built for translation and summarization.</div>
+      </div>
+      <div class="tl-item c2">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2018 · 2019</div>
+        <div class="tl-what">GLUE &amp; SuperGLUE</div>
+        <div class="tl-desc">Bundled NLU tasks, one leaderboard number. The benchmark era begins.</div>
+      </div>
+      <div class="tl-item c2">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2020 · 2022</div>
+        <div class="tl-what">MMLU, BIG-bench, HELM</div>
+        <div class="tl-desc">Breadth and holism — 57 subjects, 200+ tasks, multi-dimensional reporting.</div>
+      </div>
+      <div class="tl-item c3">
+        <span class="tl-dot"></span>
+        <div class="tl-year">May 2023</div>
+        <div class="tl-what">Chatbot Arena</div>
+        <div class="tl-desc">Humans vote between anonymous answers; models ranked by Elo.</div>
+      </div>
+      <div class="tl-item c4">
+        <span class="tl-dot"></span>
+        <div class="tl-year">June 2023</div>
+        <div class="tl-what">LLM-as-a-Judge (MT-Bench)</div>
+        <div class="tl-desc">A strong model can stand in for the human panel. Automated eval is born.</div>
+      </div>
+      <div class="tl-item c4">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2024 · 2026</div>
+        <div class="tl-what">RAGAS, agent eval, the production gate</div>
+        <div class="tl-desc">Eval leaves the leaderboard and becomes infrastructure that blocks deploys.</div>
+      </div>
+    </div>
+
+    <p>The benchmark era had a built-in expiry date, and the cause was its own success. Models improved so fast that they didn't just climb the leaderboards — they <strong>saturated</strong> them. Modern models score near 100% on many GLUE tasks; the benchmark that once separated the field now separates nothing. MMLU climbed into the high 80s and 90s. Even its harder successor, MMLU-Pro, is brushing saturation: by early 2026, frontier models sit around 90%.</p>
+
+    <div class="satbars">
+      <div class="cap">Benchmark scores climbing into the saturation zone</div>
+      <div class="satzone-label">saturated</div>
+      <div class="satzone"></div>
+      <div class="satrow">
+        <div class="satname">GLUE <small>2018</small></div>
+        <div class="sattrack"><div class="satfill" data-w="97" style="background:var(--e2)"><span class="satval">~100%</span></div></div>
+      </div>
+      <div class="satrow">
+        <div class="satname">MMLU <small>2020</small></div>
+        <div class="sattrack"><div class="satfill" data-w="89" style="background:var(--e2)"><span class="satval">~88%</span></div></div>
+      </div>
+      <div class="satrow">
+        <div class="satname">MMLU-Pro <small>2024</small></div>
+        <div class="sattrack"><div class="satfill" data-w="90" style="background:var(--e4)"><span class="satval">~90%</span></div></div>
+      </div>
+    </div>
+
+    <p>And there was a quieter rot beneath the numbers: <strong>contamination</strong>. Benchmarks are public, so their questions drift into the training data of the next model — which then "knows" the test. A leaderboard score everyone aces, on questions the models may have already seen, measures almost nothing about real capability. The scoreboard had broken twice over: once from saturation, once from leakage. The field needed something models couldn't memorize and couldn't max out — something live.</p>
+  </div>
+</section>
+<!-- ===================== CHAPTER III ===================== -->
+<section class="chapter e3">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter III — The Arena</span>
+      <h2 class="chap-title">Let the crowd decide</h2>
+    </div>
+    <p class="drop">On May 3, 2023, a group of researchers out of UC Berkeley and a handful of partner universities — the team behind LMSYS — launched something deceptively simple called <strong>Chatbot Arena</strong>. You typed a question, two anonymous models answered, and you voted for the better reply. You never knew which models you were comparing until after. From thousands, then millions, of these blind votes, the Arena computed an <strong>Elo rating</strong> for each model — the same system that ranks chess players.</p>
+    <p>It was a new answer to the spine question. Instead of comparing to a fixed reference or a fixed task battery, the Arena compared each answer to <em>another answer</em>, judged by <em>a real human</em> on <em>a real question they actually cared about</em>. That solved both of the benchmark era's diseases at once. You can't saturate a moving target — the questions are whatever the crowd types next. And you can't contaminate it by memorizing a test set, because there is no fixed test set to leak.</p>
+    <div class="pull">
+      <p>The Arena's questions are whatever real people ask. You can't memorize a test that hasn't been written yet.</p>
+    </div>
+    <p>Within months the Arena became the de facto leaderboard the whole industry watched, eventually collecting millions of human votes under the name LMArena. But human preference at scale has its own costs. It's slow and expensive; it ranks a <em>bare model with a generic prompt</em>, which is almost never how anyone actually deploys one; and it would later draw pointed critique — a 2025 analysis dubbed the dynamics around it "the leaderboard illusion," arguing the rankings can be gamed and over-read. The Arena was a profound step forward. It was also, clearly, not something you could run inside your own product on every code change. For that, you'd need to make the judge itself a machine.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER IV ===================== -->
+<section class="chapter e4">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter IV — The Judge</span>
+      <h2 class="chap-title">A model to grade the models</h2>
+    </div>
+    <p class="drop">The same LMSYS team had been studying their own votes, and in June 2023 they published the paper that quietly reorganized the field: <em>Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena</em>. The finding was the kind that changes what's possible. When they handed a strong model — GPT-4 at the time — the job of grading other models' answers, it agreed with human preferences <strong>more than 80% of the time</strong>: roughly the same rate at which two humans agree with <em>each other</em>. If a machine judge matches human consensus as well as humans do, you can put it where no human panel could ever go — in a loop, on every change, at a scale of millions.</p>
+    <p>What makes the paper hold up isn't just the headline. The authors named the failure modes in the same breath, before anyone could pretend the judge was magic: <strong>position bias</strong> (favoring whichever answer comes first), <strong>verbosity bias</strong> (rewarding length), and <strong>self-enhancement bias</strong> (preferring its own style of output). Three years later, those are still the exact biases every eval engineer designs around — the same ones the bootcamp drills you to neutralize with position-swaps and rubrics. The discipline was born already knowing where its main tool lies to you.</p>
+
+    <div class="compare">
+      <div class="cap">The spine question — "what do we compare against?" — and how the answer kept changing</div>
+      <div class="cmp-grid">
+        <div class="cmp-card k1">
+          <div class="cmp-era">2002</div>
+          <div class="cmp-ans">A reference</div>
+          <div class="cmp-sub">Overlap with one human-written answer.</div>
+        </div>
+        <div class="cmp-card k2">
+          <div class="cmp-era">2018</div>
+          <div class="cmp-ans">A leaderboard</div>
+          <div class="cmp-sub">Score across a fixed battery of tasks.</div>
+        </div>
+        <div class="cmp-card k3">
+          <div class="cmp-era">2023</div>
+          <div class="cmp-ans">A human vote</div>
+          <div class="cmp-sub">Live, blind, Elo-ranked preference.</div>
+        </div>
+        <div class="cmp-card k4">
+          <div class="cmp-era">2023 &rarr;</div>
+          <div class="cmp-ans">A model's judgment</div>
+          <div class="cmp-sub">An LLM grading against your rubric.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>Refinements piled up fast. <strong>G-Eval</strong> made judges reason step-by-step before scoring, which improved their agreement with humans. Length-controlled variants of AlpacaEval tried to debias the verbosity problem statistically. Open judge models like Prometheus aimed to democratize the GPT-4-as-judge recipe. But the core move was settled: evaluation no longer required a human in the loop for every grade. It required a <em>calibrated</em> one. And that unlocked the door evaluation had been standing in front of for twenty years — into production.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER V ===================== -->
+<section class="chapter e1">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter V — Into Production</span>
+      <h2 class="chap-title">When eval stopped being a leaderboard</h2>
+    </div>
+    <p class="drop">Until 2023, "evaluation" mostly meant ranking models on public benchmarks — a research activity. The judge changed the audience. Now any team shipping an LLM feature could grade its own system, on its own data, automatically. And as teams shipped <strong>retrieval-augmented generation</strong> — RAG, the pattern behind systems like Pulse — generic "is it good" stopped being enough. A RAG answer can be fluent and still hallucinate past its sources. You needed metrics aimed at <em>where</em> it broke.</p>
+    <p>In 2024, <strong>RAGAS</strong> pioneered reference-free RAG evaluation: scoring <strong>faithfulness</strong> (is every claim supported by the retrieved context?) and context precision and recall, without needing a gold answer for every query. Around it grew an ecosystem — DeepEval and Confident AI, Braintrust, LangSmith, Arize Phoenix, TruLens, the UK AI Safety Institute's Inspect, OpenAI's Evals. Different tools, one shared shift in what evaluation was <em>for</em>.</p>
+    <div class="aside">
+      <div class="k">The shift in one line</div>
+      <p>Evaluation moved from a research checkbox to a production gate. The same eval suite that scored a model now runs in CI and blocks a prompt change that drops a metric — and live production traces flow back to become tomorrow's eval dataset.</p>
+    </div>
+    <p>This is the part the bootcamp lives in: offline iteration, a CI gate that won't let a regression merge, and online eval on sampled traffic that catches the drift your curated set never imagined. By 2026, with RAG estimated to power a majority of production AI applications, "we tried a few examples and they looked good" had become a liability rather than a workflow. The phrase teams started using for the old way was unflattering and accurate: <em>operating on vibes</em>. The whole point of the discipline was to replace the vibe with a gate.</p>
+    <div class="pull">
+      <p>The vibe-check grew up. It became infrastructure — a gate that quietly decides whether your change ships.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER VI ===================== -->
+<section class="chapter e4">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter VI — The Agent Frontier</span>
+      <h2 class="chap-title">Grading the path, not just the destination</h2>
+    </div>
+    <p class="drop">Just as production eval settled, agents broke it again. When a system plans, calls tools, and acts over many steps, the final answer is no longer the whole story. An agent can reach a plausible-looking result through a broken path — the right answer for the wrong reasons, a latent failure waiting to detonate on the next input. So agent evaluation needs two metrics, not one: <strong>task success</strong> (did it reach the goal?) and <strong>trajectory accuracy</strong> (did it take a sound path of tool calls to get there?).</p>
+    <p>Benchmarks rebuilt themselves around this. <strong>tau-bench</strong>, from the team at Sierra, drops an agent into a dual-control world with a simulated user who changes their mind, demanding policy adherence over a long conversation. <strong>SWE-bench</strong> scores real GitHub bug-fixes, <strong>GAIA</strong> tests general assistant tasks, <strong>OSWorld</strong> and <strong>WebArena</strong> put agents on real desktops and browsers. But the deepest shift was a change in what counts as a score at all.</p>
+
+    <div class="gapviz">
+      <div class="cap">The reliability gap — capability is not consistency</div>
+      <div class="gaprow">
+        <div class="gaplabel"><b>pass^1</b><small>can it do it once?</small></div>
+        <div class="gaptrack"><div class="gapfill" data-w="90" style="background:var(--e1)">~90%</div></div>
+      </div>
+      <div class="gaprow">
+        <div class="gaplabel"><b>pass^k</b><small>can it do it reliably?</small></div>
+        <div class="gaptrack"><div class="gapfill" data-w="70" style="background:var(--e4)">~70%</div></div>
+      </div>
+      <div class="gapnote">A 90% benchmark can mean ~70% reliability when real users retry. The gap is the product.</div>
+    </div>
+
+    <p>For most of the field's history, a benchmark reported whether a model <em>could</em> do a task — one attempt, one score. Agents forced the harder question: does it do the task <strong>reliably</strong>, run after run? The metric for this is <span class="mono">pass^k</span> — the chance it succeeds every time across k attempts — and the gap between it and single-shot <span class="mono">pass^1</span> is often 15 to 25 points. A model that solves something 90% of the time once can drop toward 70% reliability when real users hit it repeatedly. Capability was never the hard part. <strong>Consistency</strong> is.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER VII ===================== -->
+<section class="chapter e0">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter VII — Where It Sits Today</span>
+      <h2 class="chap-title">The eval is the moat</h2>
+    </div>
+    <p class="drop">Here is the quiet conclusion the field arrived at by 2026. As frontier models converge — as the gap between the best of them narrows and any capable model is a few API calls away — the thing that actually separates a working product from a demo is no longer <em>which model you use</em>. It's whether you can tell, precisely and continuously, that it's working on <em>your</em> task with <em>your</em> data. Your model is rented. Your eval set is owned. Increasingly, your eval set <em>is</em> your real intellectual property — the encoded, checkable definition of what "good" means for your problem that nobody else has.</p>
+    <p>That reframes a lot. The bottleneck on improving an AI product is often not a better model but a better measurement of the one you have — you can't optimize what you can't see. It's why the same teams that once chased leaderboard points now guard a private, versioned, held-out eval set like a trade secret, and why "what's your eval story?" has become a real question in funding rooms and hiring loops alike.</p>
+
+    <div class="ledger">
+      <div class="ledger-col solved">
+        <h4>What evaluation solved</h4>
+        <ul>
+          <li><b>Scalable scoring</b> — a calibrated judge grades millions of outputs no human panel could.</li>
+          <li><b>Regression gates</b> — quality became a CI check that blocks bad merges, like tests for code.</li>
+          <li><b>Multidimensional quality</b> — faithfulness, relevance, safety as separate, countable signals.</li>
+          <li><b>A production loop</b> — real traffic becomes tomorrow's eval data.</li>
+        </ul>
+      </div>
+      <div class="ledger-col hard">
+        <h4>What's still hard</h4>
+        <ul>
+          <li><b>Judging the judge</b> — biases persist; calibration against humans is ongoing, not one-time.</li>
+          <li><b>Trajectory at scale</b> — grading an agent's path, not just its answer, is expensive and noisy.</li>
+          <li><b>The contamination arms race</b> — public sets leak; held-out sets are the only defense.</li>
+          <li><b>Knowing what to measure</b> — a 0.95 faithfulness score is worthless if the knowledge base is stale.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>That last point is the field's current edge. A RAG system can score beautifully on faithfulness — every claim faithfully drawn from its context — and still be confidently wrong, because the context itself was out of date. Inference-layer eval can't catch a bad knowledge base. The frontier of evaluation in 2026 is pushing outward from the model's output toward the whole system feeding it: the data, the retrieval, the reliability across runs. The measure problem was never fully solved. It just keeps moving to wherever the hardest, most valuable question now lives.</p>
+    <div class="pull">
+      <p>Evaluation went from the afterthought at the end of the project to the discipline that decides who ships.</p>
+    </div>
+    <p>Which returns us to where the bootcamp begins. "It looks good" was always going to fail — not because anyone was careless, but because language has no single right answer to overlap against, and never did. Twenty years of evaluation history is the story of the field admitting that, and building, layer by layer, something better to compare against: a reference, then a leaderboard, then a human, then a calibrated machine, and finally your own production reality. The skill of turning that into a number you can defend isn't a footnote to building with AI. By 2026, it's most of the job.</p>
+  </div>
+</section>
+
+<hr class="sec">
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="fnote">
+      <b>AI Foundations Bootcamp — No. 05: LLM Evaluation.</b><br>
+      Deliverable #2 · The Story. Companion to the bootcamp guide and slide deck (D1).<br>
+      A narrative synthesis of the field's history and current practice, drawn from primary papers, framework documentation, and current reporting through mid-2026.
+    </p>
+    <div class="srcs">
+      <b>GROUNDING</b>
+      Papineni et al. (BLEU, 2002) · Lin (ROUGE, 2004) · Wang et al. (GLUE 2018, SuperGLUE 2019) · Hendrycks et al. (MMLU, 2020) · Stanford HELM · Google BIG-bench<br>
+      LMSYS / Chiang, Zheng, Sheng, Zhang, Gonzalez, Stoica (Chatbot Arena, May 2023) · Zheng et al. (Judging LLM-as-a-Judge with MT-Bench, NeurIPS 2023) · "The Leaderboard Illusion" (2025)<br>
+      Es et al. (RAGAS, 2024) · DeepEval / Confident AI · Braintrust · LangSmith · Arize Phoenix · TruLens · UK AISI Inspect · OpenAI Evals · Yao et al. (tau-bench, Sierra) · SWE-bench · GAIA
+    </div>
+  </div>
+</footer>
+
+<script>
+  const prog = document.getElementById('progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const sc = h.scrollTop / (h.scrollHeight - h.clientHeight);
+    prog.style.width = Math.min(100, sc * 100) + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fillBars = (el) => {
+    el.querySelectorAll('.satfill, .gapfill').forEach(f => {
+      const w = f.getAttribute('data-w'); if (w) f.style.width = w + '%';
+    });
+  };
+  if (!reduce) {
+    const targets = document.querySelectorAll('.chapter > .wrap > *, .timeline, .satbars, .compare, .gapviz, .ledger');
+    targets.forEach(t => t.classList.add('reveal'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          if (e.target.querySelector && (e.target.classList.contains('satbars') || e.target.classList.contains('gapviz'))) fillBars(e.target);
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    targets.forEach(t => io.observe(t));
+  } else {
+    document.querySelectorAll('.satbars, .gapviz').forEach(fillBars);
+  }
+</script>
+</body>
+</html>
