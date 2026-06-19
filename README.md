@@ -21,6 +21,7 @@ Narrative write-ups and learnings.
 | --- | --- |
 | [llm-evaluation-story.html](stories/llm-evaluation-story.html) | LLM Evaluation |
 | [agentic-systems-story.html](stories/agentic-systems-story.html) | Agentic Systems |
+| [rag-story.html](stories/rag-story.html) | RAG |
 
 ### `references/`
 Reference docs I keep coming back to.

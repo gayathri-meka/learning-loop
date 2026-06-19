@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Open-Book Exam — How Retrieval-Augmented Generation Became the Backbone of Production AI</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee; --surface: #eceae4; --surface2: #e2e0d9; --border: #d0cdc4; --rule: #cbc6b9;
+    --text: #211e1a; --ink: #2a2722; --muted: #6f665a; --faint: #9b9384;
+    --accent: #2a6b3c;
+    --e1: #1a7a5e; /* origins green */
+    --e2: #7a6200; /* gold rush amber */
+    --e3: #1a5c8a; /* advanced blue */
+    --e4: #c0450e; /* friction orange */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before { animation: none !important; transition: none !important; } }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 18px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+
+  .progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: var(--accent); z-index: 200; transition: width 0.1s linear; }
+
+  .toplabel { position: fixed; top: 0; left: 0; right: 0; height: 46px; background: rgba(245,243,238,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 150; display: flex; align-items: center; padding: 0 26px; }
+  .toplabel span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .toplabel b { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 28px; }
+
+  header.hero { padding: 150px 0 70px; border-bottom: 1px solid var(--rule); }
+  .hero .kicker { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); margin-bottom: 30px; }
+  .hero .kicker b { color: var(--accent); font-weight: 600; }
+  h1.title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(42px, 8vw, 78px); line-height: 1.02; letter-spacing: -0.025em; color: var(--ink); margin-bottom: 34px; }
+  h1.title em { font-style: italic; font-weight: 400; }
+  .hero .deck { font-family: 'Fraunces', serif; font-weight: 300; font-style: italic; font-size: clamp(20px, 3.2vw, 26px); line-height: 1.48; color: var(--muted); margin-bottom: 40px; }
+  .hero .byline { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--faint); line-height: 1.9; border-top: 1px solid var(--border); padding-top: 22px; }
+  .hero .byline b { color: var(--muted); font-weight: 500; }
+
+  .chapter { padding: 72px 0 0; }
+  .chap-head { margin-bottom: 30px; }
+  .chap-num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; display: inline-block; }
+  .e1 .chap-num { color: var(--e1); } .e2 .chap-num { color: var(--e2); } .e3 .chap-num { color: var(--e3); } .e4 .chap-num { color: var(--e4); } .e0 .chap-num { color: var(--accent); }
+  .chap-title { font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(30px, 5vw, 44px); line-height: 1.08; letter-spacing: -0.015em; color: var(--ink); }
+
+  .chapter p { margin-bottom: 24px; font-size: 18px; line-height: 1.78; }
+  .chapter p.drop::first-letter { font-family: 'Fraunces', serif; font-weight: 400; float: left; font-size: 76px; line-height: 0.82; padding: 6px 12px 0 0; color: var(--ink); }
+  .chapter strong { font-weight: 600; color: var(--ink); }
+  .chapter em { font-style: italic; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.84em; background: var(--surface); padding: 1px 6px; border-radius: 4px; color: var(--ink); }
+
+  .pull { margin: 40px 0; padding: 4px 0 4px 28px; border-left: 3px solid var(--accent); }
+  .e1 .pull { border-color: var(--e1); } .e2 .pull { border-color: var(--e2); } .e3 .pull { border-color: var(--e3); } .e4 .pull { border-color: var(--e4); }
+  .pull p { font-family: 'Fraunces', serif; font-weight: 300; font-style: italic; font-size: clamp(22px, 3.4vw, 28px); line-height: 1.4; color: var(--ink); margin: 0; }
+
+  .aside { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 26px; margin: 34px 0; }
+  .aside .k { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 10px; }
+  .aside p { font-size: 16px; line-height: 1.65; color: var(--muted); margin: 0; }
+
+  /* era timeline */
+  .timeline { margin: 44px 0; padding-left: 4px; }
+  .tl-item { position: relative; padding: 0 0 28px 36px; border-left: 2px solid var(--rule); }
+  .tl-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .tl-dot { position: absolute; left: -8px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 3px solid var(--accent); }
+  .tl-item.c1 .tl-dot { border-color: var(--e1); } .tl-item.c2 .tl-dot { border-color: var(--e2); }
+  .tl-item.c3 .tl-dot { border-color: var(--e3); } .tl-item.c4 .tl-dot { border-color: var(--e4); }
+  .tl-year { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .tl-item.c1 .tl-year { color: var(--e1); } .tl-item.c2 .tl-year { color: var(--e2); }
+  .tl-item.c3 .tl-year { color: var(--e3); } .tl-item.c4 .tl-year { color: var(--e4); }
+  .tl-what { font-family: 'Fraunces', serif; font-size: 19px; color: var(--ink); margin-bottom: 3px; }
+  .tl-desc { font-size: 15px; color: var(--muted); line-height: 1.55; }
+
+  /* pipeline flow */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px 24px 22px; margin: 40px 0; }
+  .flow .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 20px; }
+  .flow-row { display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap; gap: 7px; }
+  .flow-node { border: 1px solid var(--border); border-radius: 9px; background: var(--bg); padding: 11px 12px; text-align: center; min-width: 96px; flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; }
+  .flow-node.hot { background: var(--e1); border-color: var(--e1); }
+  .flow-node .n-label { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: var(--ink); line-height: 1.15; }
+  .flow-node.hot .n-label { color: #fff; }
+  .flow-node .n-sub { font-size: 10.5px; color: var(--muted); margin-top: 3px; line-height: 1.25; }
+  .flow-node.hot .n-sub { color: #e9e6df; }
+  .flow-arrow { display: flex; align-items: center; color: var(--faint); font-size: 15px; font-family: 'IBM Plex Mono', monospace; }
+  .flow-note { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--faint); margin-top: 16px; text-align: center; letter-spacing: 0.03em; }
+  .flow-note b { color: var(--e2); font-weight: 600; }
+  @media (max-width: 680px) { .flow-row { flex-direction: column; } .flow-arrow { transform: rotate(90deg); justify-content: center; } .flow-node { width: 100%; } }
+
+  /* compare grid (reused for advanced-RAG fixes) */
+  .compare { margin: 44px 0; }
+  .compare .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 18px; text-align: center; }
+  .cmp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cmp-card { border: 1px solid var(--border); border-radius: 11px; padding: 16px 14px; background: var(--surface); text-align: center; }
+  .cmp-era { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; margin-bottom: 8px; color: var(--e3); }
+  .cmp-ans { font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink); line-height: 1.15; margin-bottom: 6px; }
+  .cmp-sub { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  @media (max-width: 680px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* faceoff (is RAG dead) */
+  .faceoff { margin: 40px 0; }
+  .faceoff .cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 18px; text-align: center; }
+  .fo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fo-card { border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; background: var(--surface); }
+  .fo-card .fo-side { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 12px; }
+  .fo-card.a .fo-side { color: var(--e4); } .fo-card.b .fo-side { color: var(--e1); }
+  .fo-claim { font-family: 'Fraunces', serif; font-size: 19px; color: var(--ink); line-height: 1.22; margin-bottom: 10px; }
+  .fo-body { font-size: 14.5px; color: var(--muted); line-height: 1.55; }
+  .fo-resolve { margin-top: 14px; border: 1px solid var(--border); border-radius: 12px; padding: 16px 22px; background: var(--surface2); text-align: center; }
+  .fo-resolve .k { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 6px; }
+  .fo-resolve p { font-family: 'Fraunces', serif; font-style: italic; font-size: 18px; color: var(--ink); margin: 0; line-height: 1.4; }
+  @media (max-width: 680px) { .fo-grid { grid-template-columns: 1fr; } }
+
+  /* ledger */
+  .ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 40px 0; }
+  .ledger-col { border: 1px solid var(--border); border-radius: 14px; padding: 24px; background: var(--surface); }
+  .ledger-col h4 { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; }
+  .ledger-col.solved h4 { color: var(--e1); }
+  .ledger-col.hard h4 { color: var(--e4); }
+  .ledger-col ul { list-style: none; }
+  .ledger-col li { font-size: 15px; line-height: 1.5; padding: 9px 0 9px 24px; position: relative; color: var(--muted); border-top: 1px solid var(--border); }
+  .ledger-col li:first-child { border-top: none; }
+  .ledger-col li::before { position: absolute; left: 0; top: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; }
+  .ledger-col.solved li::before { content: '+'; color: var(--e1); }
+  .ledger-col.hard li::before { content: '\2013'; color: var(--e4); }
+  .ledger-col li b { color: var(--ink); font-weight: 600; }
+  @media (max-width: 680px) { .ledger { grid-template-columns: 1fr; } }
+
+  hr.sec { border: none; border-top: 1px solid var(--rule); margin: 64px 0 0; }
+
+  footer.foot { padding: 70px 0 90px; margin-top: 56px; border-top: 1px solid var(--rule); }
+  footer.foot .fnote { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--faint); line-height: 1.8; }
+  footer.foot .fnote b { color: var(--muted); font-weight: 500; }
+  .srcs { margin-top: 24px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--faint); line-height: 1.85; }
+  .srcs b { color: var(--muted); display: block; margin-bottom: 6px; letter-spacing: 0.08em; }
+
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="toplabel"><span>AI Foundations · No. 03 — <b>The Story of RAG</b></span></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Deliverable #2 &nbsp;·&nbsp; <b>The Story</b> &nbsp;·&nbsp; A researched long-read</div>
+    <h1 class="title">The open-<br>book exam</h1>
+    <p class="deck">A language model is a closed-book test: it can only recite what it memorized, and when it doesn't know, it makes things up. The fix was almost embarrassingly simple — let it look things up. This is the story of how that five-year-old idea, born with a name its own inventor apologized for, became the backbone of nearly every AI product shipped today.</p>
+    <div class="byline">
+      <b>Reading time</b> ~14 min &nbsp;·&nbsp; <b>Companion to</b> the RAG bootcamp (D1)<br>
+      <b>Arc</b> the closed book &rarr; the 2020 paper &rarr; the gold rush &rarr; the disillusionment &rarr; advanced RAG &rarr; &ldquo;is RAG dead?&rdquo; &rarr; the loop
+    </div>
+  </div>
+</header>
+
+<!-- ===================== CHAPTER I ===================== -->
+<section class="chapter e1">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter I — The Closed Book</span>
+      <h2 class="chap-title">A brilliant student who can't look anything up</h2>
+    </div>
+    <p class="drop">Picture the most well-read person you've ever met, sealed in a room with no books, no phone, no internet, and asked to answer any question on earth from memory alone. They'll be astonishing on what they happened to study and confidently, fluently wrong on everything else — and they'll never be able to tell you which is which. That is a large language model taking a <strong>closed-book exam</strong>. Its knowledge is frozen at the moment training stopped; it has never seen your company's documents; and when it reaches the edge of what it memorized, it doesn't stop — it <strong>confabulates</strong>, producing a plausible answer with no source behind it.</p>
+    <p>This is the failure mode underneath most of the trouble people have with LLMs: <strong>hallucination</strong>, stale knowledge, and no way to cite a source. None of it is a flaw in the model's intelligence. It's a flaw in the format of the test. A closed-book exam measures recall. Most real questions — <em>which candidates did we place at Acme last week, what does our refund policy say, what changed in the contract</em> — are open-book by nature. The answer isn't in the student's memory. It's in the filing cabinet.</p>
+    <div class="pull">
+      <p>The fix was never a smarter student. It was handing the same student the open book.</p>
+    </div>
+    <p>That is the entire idea of Retrieval-Augmented Generation, and it's why a system like <strong>Pulse</strong> — a placement bot answering from live candidate and role data the base model never saw — can't be built any other way. You don't retrain the model every time a candidate gets placed. You let it look the answer up at the moment it's asked. The hard part, as the next twenty years would prove, is everything hiding inside the words "look it up."</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER II ===================== -->
+<section class="chapter e1">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter II — The 2020 Paper</span>
+      <h2 class="chap-title">Reading Wikipedia, and a name nobody loved</h2>
+    </div>
+    <p class="drop">The instinct to let a model look things up was older than the transformer. In 2017, a system called DrQA was already <em>reading Wikipedia</em> to answer open-domain questions. But 2020 was the year three pieces snapped together. <strong>Dense Passage Retrieval</strong> showed that searching by meaning — encoding a question and a passage into vectors and comparing them — beat decades-old keyword search by a wide margin on question answering. Google's <strong>REALM</strong> baked retrieval directly into a model's pre-training. And then a team led by <strong>Patrick Lewis</strong>, working across Facebook AI Research, University College London, and NYU, unified the pieces into a single, general framework and gave it a name.</p>
+
+    <div class="timeline">
+      <div class="tl-item c1">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2017</div>
+        <div class="tl-what">DrQA — &ldquo;Reading Wikipedia&rdquo;</div>
+        <div class="tl-desc">Open-domain QA by retrieving documents, then reading them. The lineage begins.</div>
+      </div>
+      <div class="tl-item c1">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2020</div>
+        <div class="tl-what">DPR · REALM · the RAG paper</div>
+        <div class="tl-desc">Dense retrieval beats keyword search; retrieval enters pre-training; Lewis et al. name the framework.</div>
+      </div>
+      <div class="tl-item c2">
+        <span class="tl-dot"></span>
+        <div class="tl-year">Late 2022</div>
+        <div class="tl-what">ChatGPT &amp; the gold rush</div>
+        <div class="tl-desc">&ldquo;Chat with your docs&rdquo; becomes the killer app. RAG goes from paper to default architecture.</div>
+      </div>
+      <div class="tl-item c4">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2023</div>
+        <div class="tl-what">The disillusionment</div>
+        <div class="tl-desc">Naive pipelines demo well and fail in production. Retrieval is the bottleneck.</div>
+      </div>
+      <div class="tl-item c3">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2024</div>
+        <div class="tl-what">Advanced &amp; GraphRAG</div>
+        <div class="tl-desc">Reranking, hybrid search, evaluation; Microsoft's GraphRAG for multi-hop questions.</div>
+      </div>
+      <div class="tl-item c1">
+        <span class="tl-dot"></span>
+        <div class="tl-year">2025 · 2026</div>
+        <div class="tl-what">Agentic RAG &amp; context engineering</div>
+        <div class="tl-desc">Retrieval becomes a step in a reasoning loop the agent controls.</div>
+      </div>
+    </div>
+
+    <p>The paper was <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em>, NeurIPS 2020. Its architecture is the one every RAG system still echoes: a <strong>parametric memory</strong> (a generator — they used BART) paired with a <strong>non-parametric memory</strong> (a dense vector index of Wikipedia). Ask a question, retrieve the most relevant passages, condition the generation on them. The result set a new state of the art on open-domain QA and fact verification — proof that a model with an open book produces more specific, more factual answers than one running on memory alone.</p>
+    <p>There's a small, telling footnote to the founding. Lewis has cheerfully <strong>apologized for the acronym</strong>. The team always meant to find something more elegant than &ldquo;RAG,&rdquo; but, as he later put it, when it came time to write the paper, nobody had a better idea. The name stuck — and went on to describe a whole family of techniques across hundreds of papers and dozens of products. A clunky three letters became one of the most load-bearing ideas in applied AI.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER III ===================== -->
+<section class="chapter e2">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter III — The Gold Rush</span>
+      <h2 class="chap-title">Chat with your docs</h2>
+    </div>
+    <p class="drop">For two years RAG was a respected research result that most of the world had never heard of. Then, in late 2022, ChatGPT arrived and every company on earth asked the same question: <em>can it answer from our data?</em> The honest answer was no — not on its own, and not by pasting a knowledge base into a chat box, because there was a hard limit on how much text fit in a prompt. RAG was the bridge. It became the default architecture for &ldquo;chat with your docs&rdquo; almost overnight, and it has a shape worth committing to memory.</p>
+
+    <div class="flow">
+      <div class="cap">The naive RAG pipeline — query time</div>
+      <div class="flow-row">
+        <div class="flow-node"><span class="n-label">QUERY</span><span class="n-sub">user question</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node hot"><span class="n-label">EMBED</span><span class="n-sub">question &rarr; vector</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node hot"><span class="n-label">SEARCH</span><span class="n-sub">vector DB, top-k</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><span class="n-label">AUGMENT</span><span class="n-sub">chunks into prompt</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><span class="n-label">GENERATE</span><span class="n-sub">grounded answer</span></div>
+      </div>
+      <div class="flow-note"><b>Build time:</b> documents &rarr; chunk &rarr; embed &rarr; store in vector DB &nbsp;·&nbsp; done once, ahead of any query</div>
+    </div>
+
+    <p>Split your documents into chunks, turn each into a vector, and store them. At query time, embed the question, pull the nearest chunks, paste them into the prompt, and let the model answer from them. Simple enough to build in a weekend — and a whole industry rushed in to sell the pieces. A <strong>vector-database gold rush</strong> followed: Pinecone, Weaviate, Chroma, Qdrant, Milvus, and Postgres's pgvector all competed to be the filing cabinet. Frameworks like LangChain and LlamaIndex turned the pipeline into a few lines of glue. By 2025, every major cloud — AWS, Google, Microsoft, IBM, NVIDIA, Oracle — was selling RAG as a managed service.</p>
+    <div class="aside">
+      <div class="k">Why not just fine-tune?</div>
+      <p>Fine-tuning bakes knowledge into the weights — slow, expensive, and stale the moment the data changes. RAG keeps knowledge in an index you can update in seconds, and it can show you which document an answer came from. For anything that changes or needs a citation, retrieval wins.</p>
+    </div>
+    <p>It looked, for a moment, solved. You could stand up a demo that answered questions about your own documents in an afternoon, and it felt like magic. Then teams tried to ship those demos to real users — and discovered that the easy 80% had been hiding a brutal 20%.</p>
+  </div>
+</section>
+<!-- ===================== CHAPTER IV ===================== -->
+<section class="chapter e4">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter IV — The Disillusionment</span>
+      <h2 class="chap-title">The demo that died in production</h2>
+    </div>
+    <p class="drop">The dirty secret of RAG is that the generation half mostly works, and the retrieval half mostly doesn't. An LLM handed the right passages writes a good answer almost every time. The trouble is getting it the right passages — and a naive pipeline gets them wrong in a dozen quiet ways. The model is only ever as good as what you put in front of it, so <strong>retrieval is the bottleneck</strong>, and a confident answer built on the wrong chunk is worse than no answer at all.</p>
+    <p>The failures are unglamorous and everywhere. <strong>Chunking</strong> splits a single idea across two fragments, so neither retrieves cleanly. Pure vector search <strong>misses exact terms</strong> — a part number, a name — that keyword search would have nailed. Stuff too many chunks in and the model gets <em>lost in the middle</em>, a well-documented tendency to ignore information buried in the center of a long prompt. And every irrelevant passage you retrieve doesn't just waste space; it actively <strong>degrades</strong> the answer, pulling the model toward noise. For Pulse, that's the difference between surfacing the right candidate and confidently citing one who was never placed.</p>
+    <div class="pull">
+      <p>Building a RAG demo is a weekend. Making it production-grade is the whole job.</p>
+    </div>
+    <p>This was the disillusionment of 2023: a thousand impressive demos, a fraction of them survivable in front of real users. The gap between them had a single cause — naive retrieval — and closing it turned RAG from a recipe you followed into an engineering discipline you practiced.</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER V ===================== -->
+<section class="chapter e3">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter V — Advanced RAG</span>
+      <h2 class="chap-title">Teaching the system to read better</h2>
+    </div>
+    <p class="drop">If the retriever is the bottleneck, you widen the retriever. The years after the gold rush produced a toolkit — sometimes called &ldquo;advanced RAG&rdquo; — aimed squarely at getting the <em>right</em> chunks in front of the model and nothing else. None of it is exotic. All of it is the difference between a demo and a system.</p>
+
+    <div class="compare">
+      <div class="cap">The advanced-RAG toolkit — fixing the retriever</div>
+      <div class="cmp-grid">
+        <div class="cmp-card">
+          <div class="cmp-era">RERANK</div>
+          <div class="cmp-ans">Re-order by relevance</div>
+          <div class="cmp-sub">Pull many chunks fast, then a cross-encoder re-scores the top few precisely.</div>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-era">HYBRID</div>
+          <div class="cmp-ans">Keyword + vector</div>
+          <div class="cmp-sub">Combine BM25 and dense search so exact terms and meaning both land.</div>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-era">REWRITE</div>
+          <div class="cmp-ans">Fix the query first</div>
+          <div class="cmp-sub">Expand or rephrase the question (HyDE) before searching, not after.</div>
+        </div>
+        <div class="cmp-card">
+          <div class="cmp-era">CHUNK</div>
+          <div class="cmp-ans">Smarter splitting</div>
+          <div class="cmp-sub">Semantic, sentence-window, parent-document — keep whole ideas intact.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>A <strong>reranker</strong> lets you cast a wide net cheaply and then spend a more precise model on just the finalists, reordering them by true relevance. <strong>Hybrid search</strong> runs keyword and vector retrieval together, so a query that hinges on an exact string and one that hinges on meaning both succeed. <strong>Query rewriting</strong> — including tricks like generating a hypothetical answer and searching with <em>that</em> — fixes the question before it ever hits the index. And smarter <strong>chunking</strong> stops cutting ideas in half. Underneath all of it sits the discipline the bootcamp's sibling topic is built on: <strong>evaluation</strong>. Frameworks like RAGAS made retrieval measurable — faithfulness, context precision and recall — so a team could finally answer the question that haunted every naive pipeline: <em>did that change actually help, or did it just feel like it?</em></p>
+    <div class="aside">
+      <div class="k">The shift in one line</div>
+      <p>Naive RAG asks &ldquo;what's nearest?&rdquo; Advanced RAG asks &ldquo;what's actually relevant, and how would I know?&rdquo; The leap is from a similarity lookup to a measured retrieval system.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER VI ===================== -->
+<section class="chapter e4">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter VI — &ldquo;Is RAG Dead?&rdquo;</span>
+      <h2 class="chap-title">The obituary that keeps getting written</h2>
+    </div>
+    <p class="drop">There is a headline that returns on a schedule, every time context windows grow: <em>is RAG dead?</em> It ran when Claude reached 100K tokens, again when Gemini claimed two million, and again in 2026 when GPT-5 shipped million-token windows in production. The logic is seductive — if you can pour an entire encyclopedia into a single prompt, why bother chunking, embedding, and retrieving at all? Just give the model everything.</p>
+
+    <div class="faceoff">
+      <div class="cap">The recurring debate</div>
+      <div class="fo-grid">
+        <div class="fo-card a">
+          <div class="fo-side">The long-context claim</div>
+          <div class="fo-claim">&ldquo;Just put everything in the prompt.&rdquo;</div>
+          <div class="fo-body">Windows are huge now. No pipeline, no vector DB, no retrieval bugs — the model reads it all and answers.</div>
+        </div>
+        <div class="fo-card b">
+          <div class="fo-side">The RAG reality</div>
+          <div class="fo-claim">&ldquo;Everything is slow, costly, and still wrong.&rdquo;</div>
+          <div class="fo-body">You pay per token on every call, latency climbs, the index updates but the prompt doesn't, and long context still degrades and still hallucinates.</div>
+        </div>
+      </div>
+      <div class="fo-resolve">
+        <div class="k">Where it lands</div>
+        <p>Not rivals — complementary. Retrieval narrows; long context reasons over what's left.</p>
+      </div>
+    </div>
+
+    <p>The rebuttal has held every time, for reasons that compound. <strong>Cost and latency</strong>: a million-token prompt is billed and processed on every single query, where an index is searched in milliseconds. <strong>Freshness</strong>: the index updates the instant your data changes; the context you hand-assemble does not. <strong>Provenance</strong>: RAG can tell you which document an answer came from — a long prompt can't tell you why it said what it said, which is disqualifying in regulated work. <strong>Scale</strong>: no window, however vast, holds a corporation's trillion documents. And the quiet one: even with everything in context, models still lose the middle and still confabulate. Research weighing retrieval against long context keeps reaching the same verdict — they're <strong>complementary</strong>. The right frame was never &ldquo;which wins.&rdquo; It was &ldquo;retrieval narrows the haystack; the big window reasons over what survives.&rdquo;</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER VII ===================== -->
+<section class="chapter e0">
+  <div class="wrap">
+    <div class="chap-head">
+      <span class="chap-num">Chapter VII — Where It Sits Today</span>
+      <h2 class="chap-title">From a pipeline to a loop</h2>
+    </div>
+    <p class="drop">The deepest change in RAG by 2026 isn't a better embedding model. It's that retrieval stopped being a fixed pipeline that runs once per question and became a <strong>step in a reasoning loop</strong> the model itself controls. In <strong>agentic RAG</strong>, the LLM decides <em>when</em> to retrieve, <em>what</em> to search for, and whether the chunks it got back are good enough — or whether it should rewrite the query and try again. Patterns like Self-RAG and corrective RAG let the system critique its own retrieval mid-flight. The retriever went from a conveyor belt to a tool an agent picks up when it judges that it needs to.</p>
+    <p>Two other frontiers matter. <strong>GraphRAG</strong>, pioneered at Microsoft, builds a knowledge graph over your corpus so the system can answer the questions plain vector search chokes on — multi-hop chains and &ldquo;summarize everything about X&rdquo; questions that require connecting many documents, not finding one. And the whole activity is being re-christened <strong>context engineering</strong>: retrieval as one move among many an agent makes to assemble exactly the right context — writing, compressing, selecting, isolating — for the task in front of it.</p>
+
+    <div class="ledger">
+      <div class="ledger-col solved">
+        <h4>What RAG solved</h4>
+        <ul>
+          <li><b>Grounding</b> — answers anchored in real sources, not just the model's memory.</li>
+          <li><b>Freshness</b> — update an index in seconds; no retraining to learn new facts.</li>
+          <li><b>Provenance</b> — show the document an answer came from. Auditable by design.</li>
+          <li><b>Private knowledge</b> — a general model answering from your proprietary data.</li>
+        </ul>
+      </div>
+      <div class="ledger-col hard">
+        <h4>What's still hard</h4>
+        <ul>
+          <li><b>Retrieval quality</b> — still the ceiling; a system is only as good as what it finds.</li>
+          <li><b>Multi-hop &amp; global</b> — connecting many documents is what GraphRAG is still chasing.</li>
+          <li><b>Knowing when to retrieve</b> — and when to stop, in an agentic loop.</li>
+          <li><b>Security</b> — poisoned or conflicting sources can quietly steer the answer.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>Stand back and the shape of it is clear. The 2020 idea — a model with a frozen memory, handed an open book at the moment of the question — was never replaced by anything. Long context didn't kill it; agents didn't kill it. It absorbed each new capability and became something closer to infrastructure: the default way you give an AI system access to knowledge it wasn't born with. Roughly a majority of production AI applications now lean on it in some form.</p>
+    <div class="pull">
+      <p>The student never got a bigger memory. They got better at using the library.</p>
+    </div>
+    <p>Which is exactly why the RAG bootcamp earns its place as the template for everything else in this series. Embeddings, chunking, retrieval, reranking, and the discipline of measuring whether any of it worked aren't a single topic among many — they're the machinery underneath most things people actually build with AI. A system like Pulse isn't an application <em>of</em> a language model so much as a careful answer to one deceptively small instruction the whole field has spent five years unpacking: <em>look it up.</em></p>
+  </div>
+</section>
+
+<hr class="sec">
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="fnote">
+      <b>AI Foundations Bootcamp — No. 03: RAG.</b><br>
+      Deliverable #2 · The Story. Companion to the RAG bootcamp guide and slide deck (D1), the template for the series.<br>
+      A narrative synthesis of the field's history and current practice, drawn from primary papers, framework documentation, and current reporting through mid-2026.
+    </p>
+    <div class="srcs">
+      <b>GROUNDING</b>
+      Chen et al. (DrQA, 2017) · Karpukhin et al. (DPR, 2020) · Guu et al. (REALM, 2020) · Lewis et al. (Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks, NeurIPS 2020) · NVIDIA &amp; interviews on the naming<br>
+      Liu et al. (Lost in the Middle, 2023) · Es et al. (RAGAS, 2024) · Edge et al. (GraphRAG, Microsoft, 2024) · Asai et al. (Self-RAG, 2023) · Li et al. (RAG or Long-Context LLMs?, 2024) · Singh et al. (Agentic RAG survey, 2025) · SafeRAG (2025)<br>
+      Vector databases: Pinecone, Weaviate, Chroma, Qdrant, Milvus, pgvector · Orchestration: LangChain, LlamaIndex · "Is RAG dead?" / long-context discourse, 2024–2026
+    </div>
+  </div>
+</footer>
+
+<script>
+  const prog = document.getElementById('progress');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const sc = h.scrollTop / (h.scrollHeight - h.clientHeight);
+    prog.style.width = Math.min(100, sc * 100) + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const targets = document.querySelectorAll('.chapter > .wrap > *, .timeline, .flow, .compare, .faceoff, .ledger');
+    targets.forEach(t => t.classList.add('reveal'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    targets.forEach(t => io.observe(t));
+  }
+</script>
+</body>
+</html>
