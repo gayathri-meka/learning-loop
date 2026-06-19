@@ -1,6 +1,6 @@
 # 🔁 learning-loop
 
-A living archive of my learnings through this phase — bootcamps I've worked through and the stories/write-ups that came out of them. Updated roughly once a month as new material lands.
+A living archive of my learnings through this phase — bootcamps I've worked through and the stories/write-ups that came out of them. Updated as new material lands and the field progresses.
 
 ## 📚 Sections
 
