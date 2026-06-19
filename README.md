@@ -10,8 +10,10 @@ Hands-on course material and decks.
 | File | Topic |
 | --- | --- |
 | [llm-evaluation-bootcamp.html](bootcamps/llm-evaluation-bootcamp.html) | LLM Evaluation |
+| [LLM-Evaluation-Bootcamp.pptx](bootcamps/LLM-Evaluation-Bootcamp.pptx) | LLM Evaluation (slides) |
 | [rag-bootcamp.html](bootcamps/rag-bootcamp.html) | RAG |
 | [RAG-Bootcamp.pptx](bootcamps/RAG-Bootcamp.pptx) | RAG (slides) |
+| [agentic-frameworks-bootcamp.html](bootcamps/agentic-frameworks-bootcamp.html) | Agentic Frameworks |
 | [Agentic-Frameworks-Bootcamp.pptx](bootcamps/Agentic-Frameworks-Bootcamp.pptx) | Agentic Frameworks (slides) |
 
 ### `stories/`

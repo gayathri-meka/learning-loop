@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Systems Bootcamp: From Tool-Caller to Multi-Agent Architect</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #eceae4;
+    --surface2: #e2e0d9;
+    --border: #d0cdc4;
+    --accent: #2a6b3c;
+    --accent2: #1a5c8a;
+    --accent3: #c0450e;
+    --text: #1c1b18;
+    --muted: #7a7060;
+    --code-bg: #e8e5de;
+    --day1: #1a7a5e;
+    --day2: #7a6200;
+    --day3: #c0450e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(245,243,238,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 52px;
+    overflow-x: auto;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+    margin-right: 24px;
+    flex-shrink: 0;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--surface2); }
+  .nav-links a.d1 { color: var(--day1); }
+  .nav-links a.d2 { color: var(--day2); }
+  .nav-links a.d3 { color: var(--day3); }
+
+  /* HERO */
+  .hero {
+    padding: 80px 24px 60px;
+    max-width: 760px;
+    margin: 0 auto;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(36px, 7vw, 60px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .pill.accent { border-color: var(--accent); color: var(--accent); }
+
+  /* SECTION */
+  .section {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 64px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* DAY CARDS */
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding: 28px 32px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .day-header.d1 { border-left: 3px solid var(--day1); }
+  .day-header.d2 { border-left: 3px solid var(--day2); }
+  .day-header.d3 { border-left: 3px solid var(--day3); }
+
+  .day-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .d1 .day-number { color: var(--day1); }
+  .d2 .day-number { color: var(--day2); }
+  .d3 .day-number { color: var(--day3); }
+
+  .day-title {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* CONTENT BLOCKS */
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 40px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent2);
+    margin: 24px 0 8px;
+    letter-spacing: 0.01em;
+  }
+  p { margin-bottom: 16px; color: var(--text); }
+  p:last-child { margin-bottom: 0; }
+
+  strong { color: var(--text); font-weight: 500; }
+  em { color: var(--muted); }
+
+  ul, ol {
+    margin: 12px 0 16px 20px;
+  }
+  li { margin-bottom: 6px; }
+
+  /* CODE */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    position: relative;
+  }
+  pre code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c8c4bc;
+  }
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent2);
+  }
+  pre code { background: none; padding: 0; color: #3a3630; }
+
+  .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
+  /* ASCII DIAGRAMS */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 16px 0 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--muted);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .diagram .highlight { color: var(--accent2); }
+  .diagram .g { color: var(--day1); }
+  .diagram .o { color: var(--day3); }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface); }
+
+  /* CALLOUTS */
+  .callout {
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 16px 0 24px;
+    border: 1px solid;
+    font-size: 15px;
+  }
+  .callout.info {
+    background: rgba(90,255,212,0.05);
+    border-color: rgba(90,255,212,0.2);
+    color: var(--text);
+  }
+  .callout.warn {
+    background: rgba(232,255,90,0.05);
+    border-color: rgba(232,255,90,0.2);
+  }
+  .callout-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--accent2);
+  }
+  .callout.warn .callout-label { color: var(--day2); }
+
+  /* CHECKLIST */
+  .checklist {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0 24px;
+  }
+  .checklist-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .check-item.done .check-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .check-item.done .check-box::after {
+    content: '✓';
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .check-item.done .check-text {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .check-text { font-size: 14px; }
+
+  /* QUOTE / INTERVIEW PREP */
+  .quote-block {
+    border-left: 2px solid var(--accent3);
+    padding: 4px 0 4px 20px;
+    margin: 12px 0;
+  }
+  .quote-block p {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .quote-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    letter-spacing: 0.08em;
+  }
+
+  /* QUICK REF */
+  .ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  @media (max-width: 600px) { .ref-grid { grid-template-columns: 1fr; } }
+  .ref-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .ref-card h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .ref-card ul { margin: 0; padding: 0; list-style: none; }
+  .ref-card li { font-size: 14px; padding: 4px 0; color: var(--text); }
+  .ref-card li::before { content: '→ '; color: var(--muted); }
+
+  /* LINKS */
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* FOOTER */
+  footer {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SYNTAX HIGHLIGHTING APPROXIMATION */
+  .kw { color: #7c1fa0; }
+  .fn { color: #1a5c8a; }
+  .str { color: #2a6b3c; }
+  .cm { color: #9a8f7a; font-style: italic; }
+  .num { color: #c0450e; }
+  .var { color: #1c1b18; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">AGENTIC_BOOTCAMP /</span>
+  <div class="nav-links">
+    <a href="#setup">Setup</a>
+    <a href="#day1" class="d1">Day 1</a>
+    <a href="#day2" class="d2">Day 2</a>
+    <a href="#day3" class="d3">Day 3</a>
+    <a href="#quickref">Quick Ref</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <p class="hero-eyebrow">3-Day Intensive</p>
+  <h1>Agentic Systems Bootcamp<br><em>From Tool-Caller to Multi-Agent Architect</em></h1>
+  <div class="hero-meta">
+    <span class="pill accent">LangChain + LangGraph</span>
+    <span class="pill">MCP + A2A</span>
+    <span class="pill">Python</span>
+    <span class="pill">3 days</span>
+  </div>
+  <p style="color: var(--muted); font-size: 15px;">Build agents from the bare metal up — the agent loop, design patterns, stateful orchestration with LangGraph, the MCP and A2A protocols, and a working multi-agent system you can demo.</p>
+</div>
+
+<!-- SETUP -->
+<section class="section" id="setup">
+  <p class="section-label">Before You Start</p>
+
+  <h2>Setup</h2>
+  <p>Run this once before Day 1:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code>mkdir agentic-bootcamp && cd agentic-bootcamp
+python -m venv venv
+source venv/bin/activate  <span class="cm"># Mac/Linux</span>
+pip install langchain langchain-openai langgraph \
+            langgraph-supervisor "mcp[cli]" python-dotenv</code></pre>
+
+  <p>Create a <code>.env</code> file in the project root:</p>
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code>OPENAI_API_KEY=your_key_here</code></pre>
+
+  <p>Create your project structure:</p>
+  <pre><code>agentic-bootcamp/
+├── .env
+├── day1_agent.py        <span class="cm">← bare-metal agent loop</span>
+├── day2_graph.py        <span class="cm">← stateful LangGraph agent</span>
+├── day3_mcp_server.py   <span class="cm">← your own MCP server</span>
+└── day3_multiagent.py   <span class="cm">← supervisor + workers</span></code></pre>
+
+  <div class="callout info">
+    <p class="callout-label">Prerequisite</p>
+    <p>You should be comfortable calling an LLM API and have seen tool/function calling at least once. If you did the RAG bootcamp, you're set — this picks up where retrieval leaves off and gives the model <em>control</em>.</p>
+  </div>
+</section>
+
+<!-- DAY 1 -->
+<section class="section" id="day1">
+  <div class="day-header d1">
+    <span class="day-number">Day 01</span>
+    <span class="day-title">Foundations</span>
+  </div>
+
+  <h2>1.1 What Is an Agent, and Why Do They Exist?</h2>
+  <p>An LLM on its own is a text-in, text-out function. It can't check today's weather, run a query, send an email, or notice that its own last answer was wrong and try again. It predicts tokens and stops.</p>
+  <p>An <strong>agent</strong> wraps that model in a loop and hands it tools. The model is given a goal, decides on an action, the action runs, the result comes back, and the model decides what to do next — until it judges the task done. The atomic unit is sometimes called the <strong>augmented LLM</strong>: a model plus tools, memory, and the ability to retry.</p>
+
+  <h3>Workflow vs. agent — the distinction that matters</h3>
+  <p>Anthropic's framing is the cleanest in the field:</p>
+  <ul>
+    <li><strong>Workflows</strong> are systems where LLMs and tools are orchestrated through <em>predefined code paths</em>. You wrote the control flow.</li>
+    <li><strong>Agents</strong> are systems where the LLM <em>dynamically directs its own process</em> — deciding which tools to use and when, in a loop you didn't hardcode.</li>
+  </ul>
+  <p>Most production "AI features" are workflows, not agents. That's not a failure — it's usually the right call. Agents trade predictability and cost for flexibility.</p>
+
+  <div class="callout info">
+    <p class="callout-label">Mental model</p>
+    <p>A workflow is a recipe — fixed steps in a fixed order. An agent is a cook who tastes the dish and decides what to do next. Use a recipe when you can write the steps down. Hire a cook when you can't.</p>
+  </div>
+
+  <h2>1.2 The Agent Loop</h2>
+  <p>Every agent, no matter the framework, is the same loop underneath:</p>
+
+  <div class="diagram"><span class="g">THE AGENT LOOP</span>
+
+   Goal / Task
+        ↓
+   ┌──────────────┐
+   │  1. REASON   │  model thinks: what do I need to do?
+   └──────┬───────┘
+          ↓
+   ┌──────────────┐
+   │  2. ACT      │  model emits a tool call
+   └──────┬───────┘
+          ↓
+   ┌──────────────┐
+   │  3. OBSERVE  │  tool runs, result returns to the model
+   └──────┬───────┘
+          ↓
+     done? ──no──┐
+          │      │
+         yes     └──► back to 1. REASON
+          ↓
+       Answer</div>
+
+  <p>This is the <strong>ReAct</strong> pattern (Reason + Act), from the 2022 paper of the same name: interleave reasoning traces with actions so the model can plan, act, and adjust based on what it observes. Nearly every agent framework is a more ergonomic wrapper around this loop.</p>
+
+  <h2>1.3 Agentic Design Patterns</h2>
+  <p>There are two families of patterns. Knowing which one you need is half the job.</p>
+
+  <h3>Workflow patterns — you own the control flow</h3>
+  <p>Deterministic scaffolding around LLM calls. From Anthropic's <em>Building Effective Agents</em>:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Pattern</th><th>What it does</th><th>Use when</th></tr>
+    <tr><td><strong>Prompt chaining</strong></td><td>Output of one LLM call feeds the next, in sequence</td><td>Task decomposes into fixed steps</td></tr>
+    <tr><td><strong>Routing</strong></td><td>Classify the input, send it to a specialized path</td><td>Distinct categories need distinct handling</td></tr>
+    <tr><td><strong>Parallelization</strong></td><td>Run subtasks at once, aggregate results</td><td>Independent subtasks, or voting for reliability</td></tr>
+    <tr><td><strong>Orchestrator-workers</strong></td><td>A lead LLM splits work, delegates to workers, synthesizes</td><td>Subtasks aren't known until runtime</td></tr>
+    <tr><td><strong>Evaluator-optimizer</strong></td><td>One LLM generates, another critiques, loop until good</td><td>You have clear eval criteria and iteration helps</td></tr>
+  </table>
+  </div>
+
+  <h3>Agentic capability patterns — the model owns the control flow</h3>
+  <p>Andrew Ng's framing of what makes an agent capable:</p>
+  <ul>
+    <li><strong>Reflection:</strong> the model critiques its own output and revises it.</li>
+    <li><strong>Tool use:</strong> the model calls external functions to act on the world.</li>
+    <li><strong>Planning:</strong> the model breaks a goal into sub-steps and sequences them.</li>
+    <li><strong>Multi-agent collaboration:</strong> multiple specialized agents divide labor.</li>
+  </ul>
+
+  <div class="callout warn">
+    <p class="callout-label">The one rule</p>
+    <p>Start with the simplest thing that works. A single well-prompted LLM call beats a workflow; a workflow beats an agent; one agent beats many. Add complexity only when a simpler design demonstrably fails. The most common mistake in this field is reaching for a multi-agent swarm to solve a routing problem.</p>
+  </div>
+
+  <h2>1.4 Day 1 Build: A Bare-Metal Agent (No Framework)</h2>
+  <p>Before any framework, build the loop by hand. This is the single most clarifying thing you can do — every abstraction you meet later is sugar on top of this. Save as <code>day1_agent.py</code>:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">import</span> <span class="var">json</span>
+<span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">from</span> <span class="var">openai</span> <span class="kw">import</span> <span class="fn">OpenAI</span>
+
+<span class="fn">load_dotenv</span>()
+<span class="var">client</span> = <span class="fn">OpenAI</span>()
+
+<span class="cm"># --- 1. Define a tool (just a Python function) ---</span>
+<span class="kw">def</span> <span class="fn">get_weather</span>(<span class="var">city</span>: <span class="var">str</span>) -> <span class="var">str</span>:
+    <span class="cm"># A real tool would call an API. We fake it.</span>
+    <span class="kw">return</span> <span class="fn">json</span>.<span class="fn">dumps</span>({<span class="str">"city"</span>: <span class="var">city</span>, <span class="str">"temp_c"</span>: <span class="num">21</span>, <span class="str">"sky"</span>: <span class="str">"clear"</span>})
+
+<span class="var">tools</span> = [{
+    <span class="str">"type"</span>: <span class="str">"function"</span>,
+    <span class="str">"function"</span>: {
+        <span class="str">"name"</span>: <span class="str">"get_weather"</span>,
+        <span class="str">"description"</span>: <span class="str">"Get current weather for a city."</span>,
+        <span class="str">"parameters"</span>: {
+            <span class="str">"type"</span>: <span class="str">"object"</span>,
+            <span class="str">"properties"</span>: {<span class="str">"city"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>}},
+            <span class="str">"required"</span>: [<span class="str">"city"</span>]
+        }
+    }
+}]
+
+<span class="cm"># --- 2. The agent loop ---</span>
+<span class="kw">def</span> <span class="fn">run_agent</span>(<span class="var">user_input</span>):
+    <span class="var">messages</span> = [{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">user_input</span>}]
+
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="var">resp</span> = <span class="var">client</span>.<span class="var">chat</span>.<span class="var">completions</span>.<span class="fn">create</span>(
+            <span class="var">model</span>=<span class="str">"gpt-4o-mini"</span>,
+            <span class="var">messages</span>=<span class="var">messages</span>,
+            <span class="var">tools</span>=<span class="var">tools</span>
+        )
+        <span class="var">msg</span> = <span class="var">resp</span>.<span class="var">choices</span>[<span class="num">0</span>].<span class="var">message</span>
+        <span class="var">messages</span>.<span class="fn">append</span>(<span class="var">msg</span>)
+
+        <span class="cm"># No tool call → the model is done. Return its answer.</span>
+        <span class="kw">if</span> <span class="kw">not</span> <span class="var">msg</span>.<span class="var">tool_calls</span>:
+            <span class="kw">return</span> <span class="var">msg</span>.<span class="var">content</span>
+
+        <span class="cm"># Otherwise, run each tool call and feed results back.</span>
+        <span class="kw">for</span> <span class="var">call</span> <span class="kw">in</span> <span class="var">msg</span>.<span class="var">tool_calls</span>:
+            <span class="var">args</span> = <span class="fn">json</span>.<span class="fn">loads</span>(<span class="var">call</span>.<span class="var">function</span>.<span class="var">arguments</span>)
+            <span class="var">result</span> = <span class="fn">get_weather</span>(**<span class="var">args</span>)
+            <span class="fn">print</span>(<span class="str">f"  [tool] get_weather({args}) -> {result}"</span>)
+            <span class="var">messages</span>.<span class="fn">append</span>({
+                <span class="str">"role"</span>: <span class="str">"tool"</span>,
+                <span class="str">"tool_call_id"</span>: <span class="var">call</span>.<span class="var">id</span>,
+                <span class="str">"content"</span>: <span class="var">result</span>
+            })
+
+<span class="kw">print</span>(<span class="fn">run_agent</span>(<span class="str">"What should I wear in Lisbon today?"</span>))</code></pre>
+
+  <div class="callout warn">
+    <p class="callout-label">What to observe</p>
+    <p>The model decides on its own to call <code>get_weather</code> — you never told it to. The loop runs until the model stops emitting tool calls. That <code>while True</code> with a "no tool calls → done" exit <em>is</em> the agent. Everything in Days 2 and 3 is about making this loop stateful, controllable, and connectable.</p>
+  </div>
+
+  <hr class="divider">
+  <h2>Day 1 Checkpoint</h2>
+
+  <div class="checklist">
+    <p class="checklist-title">Understand</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Agent = augmented LLM (tools + memory + loop)</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Workflow vs agent: who owns the control flow</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The Reason → Act → Observe loop (ReAct)</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The two pattern families and when to reach for each</span></div>
+  </div>
+
+  <div class="checklist">
+    <p class="checklist-title">Built</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">A working agent loop in raw Python, no framework</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Watched the model decide to call a tool on its own</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Can explain why the loop terminates</span></div>
+  </div>
+</section>
+
+<!-- DAY 2 -->
+<section class="section" id="day2">
+  <div class="day-header d2">
+    <span class="day-number">Day 02</span>
+    <span class="day-title">Orchestration</span>
+  </div>
+
+  <h2>2.1 Why the Bare-Metal Loop Breaks</h2>
+  <p>Your Day 1 agent works for one-shot tasks. Push it toward anything real and it cracks in predictable ways:</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>#</th><th>Problem</th><th>What happens</th></tr>
+    <tr><td>1</td><td><strong>No persistent state</strong></td><td>Every run starts blank — no memory across turns or sessions</td></tr>
+    <tr><td>2</td><td><strong>No human-in-the-loop</strong></td><td>Can't pause for approval before a risky action (send, pay, delete)</td></tr>
+    <tr><td>3</td><td><strong>Rigid control flow</strong></td><td>Branching, retries, and cycles become a tangle of if-statements</td></tr>
+    <tr><td>4</td><td><strong>No resume</strong></td><td>Crash at step 7 of 10 → start over from zero</td></tr>
+    <tr><td>5</td><td><strong>Opaque</strong></td><td>Debugging means print statements; no view of state over time</td></tr>
+  </table>
+  </div>
+
+  <h2>2.2 LangChain vs. LangGraph</h2>
+  <p>These get conflated constantly. They solve different problems and live at different layers.</p>
+
+  <div class="diagram"><span class="g">LangChain</span>  ── the toolkit ──────────────────────────
+  model wrappers · tool abstractions · LCEL chains
+  prebuilt components · loaders · output parsers
+  best for: linear chains, "do A then B then C"
+
+<span class="o">LangGraph</span>  ── the orchestration layer ──────────────
+  models the agent as a GRAPH:
+    nodes (work)  ·  edges (transitions)  ·  state (memory)
+  built for: cycles, branching, human-in-the-loop,
+             persistence, multi-agent
+  best for: anything stateful or non-linear</span></div>
+
+  <p>Rule of thumb: if you can draw your app as a straight line, LangChain's chains are enough. The moment you need a <em>loop</em>, a <em>decision</em>, or <em>memory that survives</em>, you want LangGraph. LangGraph reached a stable v1.0 in late 2025, so its core API is no longer a moving target.</p>
+
+  <h2>2.3 LangGraph Core Concepts</h2>
+
+  <h3>State</h3>
+  <p>A shared data structure (a <code>TypedDict</code> or Pydantic model) that every node reads and writes. This is the agent's working memory, passed along the graph. For chat agents it usually holds a growing list of messages.</p>
+
+  <h3>Nodes</h3>
+  <p>Units of work. A node is just a function that takes the state and returns an update to it. A node can be a plain function, an LLM call, or a whole sub-agent.</p>
+
+  <h3>Edges &amp; conditional edges</h3>
+  <p><strong>Edges</strong> are fixed transitions: "after node A, always go to B." <strong>Conditional edges</strong> route based on state: "after the model node, if there's a tool call go to the tool node, else finish." Conditional edges are how you express the agent loop as a graph.</p>
+
+  <h3>Checkpointing</h3>
+  <p>Attach a checkpointer (e.g. <code>InMemorySaver</code>, or a database for production) and the graph saves its state at every step. This single feature unlocks <strong>memory</strong> (resume a thread by id), <strong>time-travel</strong> (replay from any step), and <strong>fault tolerance</strong> (resume after a crash).</p>
+
+  <h3>Human-in-the-loop</h3>
+  <p>Because state is checkpointed, you can <em>interrupt</em> the graph before or after a node, surface it to a human for approval or edits, then resume exactly where it paused. This is the feature that makes agents safe to put in front of real users.</p>
+
+  <h3>create_react_agent — the shortcut</h3>
+  <p>For a standard tool-calling agent you don't build the graph by hand. <code>create_react_agent</code> (from <code>langgraph.prebuilt</code>) builds the StateGraph for you: an LLM node, a tool node, and the conditional edge that loops between them. It works best with roughly 5–15 well-described tools; beyond ~20 the model starts picking the wrong one.</p>
+
+  <h2>2.4 Day 2 Build: A Stateful LangGraph Agent</h2>
+  <p>Start with the prebuilt agent plus a checkpointer, so it remembers across turns. Save as <code>day2_graph.py</code>:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="fn">ChatOpenAI</span>
+<span class="kw">from</span> <span class="var">langgraph.prebuilt</span> <span class="kw">import</span> <span class="fn">create_react_agent</span>
+<span class="kw">from</span> <span class="var">langgraph.checkpoint.memory</span> <span class="kw">import</span> <span class="fn">InMemorySaver</span>
+
+<span class="fn">load_dotenv</span>()
+
+<span class="cm"># --- A tool is just a typed Python function ---</span>
+<span class="kw">def</span> <span class="fn">get_weather</span>(<span class="var">city</span>: <span class="var">str</span>) -> <span class="var">str</span>:
+    <span class="str">"""Get current weather for a city."""</span>
+    <span class="kw">return</span> <span class="str">f"{city}: 21C, clear"</span>
+
+<span class="var">model</span> = <span class="fn">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-4o-mini"</span>, <span class="var">temperature</span>=<span class="num">0</span>)
+<span class="var">checkpointer</span> = <span class="fn">InMemorySaver</span>()
+
+<span class="var">agent</span> = <span class="fn">create_react_agent</span>(
+    <span class="var">model</span>,
+    <span class="var">tools</span>=[<span class="var">get_weather</span>],
+    <span class="var">checkpointer</span>=<span class="var">checkpointer</span>
+)
+
+<span class="cm"># thread_id ties messages to a persistent conversation</span>
+<span class="var">config</span> = {<span class="str">"configurable"</span>: {<span class="str">"thread_id"</span>: <span class="str">"user-123"</span>}}
+
+<span class="kw">def</span> <span class="fn">ask</span>(<span class="var">text</span>):
+    <span class="var">result</span> = <span class="var">agent</span>.<span class="fn">invoke</span>(
+        {<span class="str">"messages"</span>: [{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="var">text</span>}]},
+        <span class="var">config</span>
+    )
+    <span class="fn">print</span>(<span class="var">result</span>[<span class="str">"messages"</span>][-<span class="num">1</span>].<span class="var">content</span>)
+
+<span class="fn">ask</span>(<span class="str">"What's the weather in Lisbon?"</span>)
+<span class="fn">ask</span>(<span class="str">"What about Madrid?"</span>)
+<span class="fn">ask</span>(<span class="str">"Which of the two was warmer?"</span>)  <span class="cm"># needs memory of both</span></code></pre>
+
+  <p>The third question only works because the checkpointer kept the earlier turns. Now see what the prebuilt agent hides — the same loop as an explicit graph:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">from</span> <span class="var">typing</span> <span class="kw">import</span> <span class="fn">Annotated</span>, <span class="fn">TypedDict</span>
+<span class="kw">from</span> <span class="var">langgraph.graph</span> <span class="kw">import</span> <span class="fn">StateGraph</span>, <span class="fn">START</span>, <span class="fn">END</span>
+<span class="kw">from</span> <span class="var">langgraph.graph.message</span> <span class="kw">import</span> <span class="fn">add_messages</span>
+<span class="kw">from</span> <span class="var">langgraph.prebuilt</span> <span class="kw">import</span> <span class="fn">ToolNode</span>, <span class="fn">tools_condition</span>
+
+<span class="cm"># 1. State: a list of messages that nodes append to</span>
+<span class="kw">class</span> <span class="fn">State</span>(<span class="fn">TypedDict</span>):
+    <span class="var">messages</span>: <span class="fn">Annotated</span>[<span class="var">list</span>, <span class="var">add_messages</span>]
+
+<span class="var">model_with_tools</span> = <span class="var">model</span>.<span class="fn">bind_tools</span>([<span class="var">get_weather</span>])
+
+<span class="cm"># 2. Nodes</span>
+<span class="kw">def</span> <span class="fn">call_model</span>(<span class="var">state</span>: <span class="fn">State</span>):
+    <span class="kw">return</span> {<span class="str">"messages"</span>: [<span class="var">model_with_tools</span>.<span class="fn">invoke</span>(<span class="var">state</span>[<span class="str">"messages"</span>])]}
+
+<span class="cm"># 3. Wire the graph</span>
+<span class="var">graph</span> = <span class="fn">StateGraph</span>(<span class="fn">State</span>)
+<span class="var">graph</span>.<span class="fn">add_node</span>(<span class="str">"model"</span>, <span class="var">call_model</span>)
+<span class="var">graph</span>.<span class="fn">add_node</span>(<span class="str">"tools"</span>, <span class="fn">ToolNode</span>([<span class="var">get_weather</span>]))
+<span class="var">graph</span>.<span class="fn">add_edge</span>(<span class="var">START</span>, <span class="str">"model"</span>)
+<span class="cm"># conditional edge: tool call? -> tools, else -> END</span>
+<span class="var">graph</span>.<span class="fn">add_conditional_edges</span>(<span class="str">"model"</span>, <span class="var">tools_condition</span>)
+<span class="var">graph</span>.<span class="fn">add_edge</span>(<span class="str">"tools"</span>, <span class="str">"model"</span>)  <span class="cm"># loop back</span>
+
+<span class="var">app</span> = <span class="var">graph</span>.<span class="fn">compile</span>(<span class="var">checkpointer</span>=<span class="var">checkpointer</span>)</code></pre>
+
+  <div class="callout warn">
+    <p class="callout-label">What to observe</p>
+    <p>The explicit graph is the Day 1 <code>while True</code> loop drawn as nodes and edges. <code>model → tools → model</code> is the cycle; <code>tools_condition</code> is the "done?" check. Once you see that <code>create_react_agent</code> is just this graph pre-wired, frameworks stop being magic.</p>
+  </div>
+
+  <hr class="divider">
+  <h2>Day 2 Checkpoint</h2>
+  <div class="checklist">
+    <p class="checklist-title">Understand</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The 5 ways a raw loop breaks at production scale</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">LangChain (toolkit) vs LangGraph (orchestration layer)</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">State, nodes, edges, conditional edges</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">What checkpointing unlocks: memory, resume, human-in-the-loop</span></div>
+  </div>
+  <div class="checklist">
+    <p class="checklist-title">Built</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">A prebuilt agent that remembers across turns via thread_id</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The same agent as an explicit StateGraph</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Can point to the cycle and the "done?" check in the graph</span></div>
+  </div>
+</section>
+
+<!-- DAY 3 -->
+<section class="section" id="day3">
+  <div class="day-header d3">
+    <span class="day-number">Day 03</span>
+    <span class="day-title">Systems: MCP, A2A &amp; Multi-Agent</span>
+  </div>
+
+  <h2>3.1 The Interoperability Problem</h2>
+  <p>Your agent can use tools and remember things. Now it has to live in a world with <em>other</em> tools and <em>other</em> agents. Two recurring problems show up:</p>
+  <ul>
+    <li><strong>Agents need tools and data.</strong> If every tool needs custom glue for every agent, you get an N×M integration mess.</li>
+    <li><strong>Agents need to talk to other agents.</strong> A research agent built by one team needs to hand a task to a billing agent built by another.</li>
+  </ul>
+  <p>Two open protocols emerged for these two jobs, and as of late 2025 both sit under the Linux Foundation's <strong>Agentic AI Foundation</strong>, making them vendor-neutral:</p>
+
+  <div class="diagram"><span class="g">MCP</span>  — Model Context Protocol  ──  agent ↔ tools
+<span class="o">A2A</span>  — Agent-to-Agent Protocol  ──  agent ↔ agents
+
+   they are COMPLEMENTARY, not competing
+   A2A handles orchestration · MCP handles tool execution</span></div>
+
+  <h2>3.2 MCP — Model Context Protocol</h2>
+  <p>The pitch: <strong>"USB-C for AI."</strong> Before MCP, connecting an agent to Gmail, a database, and web search meant three bespoke integrations. MCP standardizes the plug — write a server once, any MCP-compatible host can use it. Anthropic introduced it in November 2024; by 2026 its SDKs see on the order of 97 million downloads a month.</p>
+
+  <h3>Architecture: host → client → server</h3>
+  <div class="diagram"><span class="highlight">HOST</span>  (the LLM app: Claude Desktop, Cursor, your agent)
+  │
+  ├── <span class="highlight">CLIENT</span>  (one connector per server, lives in the host)
+  │       │  JSON-RPC over stdio or Streamable HTTP
+  │       ▼
+  └──► <span class="highlight">SERVER</span>  (exposes capabilities to the model)</div>
+
+  <h3>Server primitives — what a server exposes</h3>
+  <ul>
+    <li><strong>Tools:</strong> executable actions the model can call (search, send, query).</li>
+    <li><strong>Resources:</strong> read-only data the host can load as context (files, records).</li>
+    <li><strong>Prompts:</strong> reusable, parameterized prompt templates.</li>
+  </ul>
+
+  <h3>Client primitives — "advanced MCP"</h3>
+  <p>This is what turns a server from a passive toolbox into an active participant in the loop:</p>
+  <ul>
+    <li><strong>Sampling:</strong> the server can ask the host's model for a completion mid-execution — to reason about intermediate state or generate content. The user can review it first.</li>
+    <li><strong>Elicitation:</strong> the server can pause and ask the <em>user</em> for input (a missing field, a confirmation) without hardcoding it.</li>
+    <li><strong>Roots:</strong> the client tells the server which filesystem locations it's allowed to touch.</li>
+  </ul>
+
+  <h3>Transports</h3>
+  <p><strong>stdio</strong> for local servers (the host spawns the server as a subprocess). <strong>Streamable HTTP</strong> for remote servers — it replaced the older HTTP+SSE transport, which is now deprecated. The 2026 spec direction pushes a stateless core plus extensions like Tasks (long-running work) and MCP Apps (server-rendered UI).</p>
+
+  <h2>3.3 A2A — Agent-to-Agent Protocol</h2>
+  <p>MCP explicitly does <em>not</em> solve agent-to-agent coordination. That's A2A's job. Built by Google (April 2025), donated to the Linux Foundation (June 2025), and stabilized at <strong>v1.0 in 2026</strong> with 150+ organizations running it in production.</p>
+
+  <h3>How it works</h3>
+  <ul>
+    <li><strong>Agent Card:</strong> each agent publishes a JSON manifest (typically at <code>/.well-known/agent.json</code>) describing its identity and skills. v1.0 added cryptographic signatures so you can verify who you're talking to.</li>
+    <li><strong>Discovery:</strong> a client agent reads another agent's card to learn what it can do.</li>
+    <li><strong>Task exchange:</strong> the client sends a task over JSON-RPC; the two exchange messages and artifacts and track the task through states (submitted → working → completed / failed).</li>
+  </ul>
+
+  <h3>MCP vs A2A — the comparison you'll be asked</h3>
+  <div class="table-wrap">
+  <table>
+    <tr><th></th><th>MCP</th><th>A2A</th></tr>
+    <tr><td><strong>Connects</strong></td><td>Agent ↔ tools &amp; data</td><td>Agent ↔ other agents</td></tr>
+    <tr><td><strong>Question it answers</strong></td><td>"How does my agent <em>use</em> a tool?"</td><td>"How does my agent <em>delegate</em> to another agent?"</td></tr>
+    <tr><td><strong>Discovery unit</strong></td><td>Tools / resources / prompts</td><td>Agent Card (skills)</td></tr>
+    <tr><td><strong>Wire format</strong></td><td>JSON-RPC</td><td>JSON-RPC</td></tr>
+    <tr><td><strong>Governance</strong></td><td>Linux Foundation (AAIF)</td><td>Linux Foundation (AAIF)</td></tr>
+  </table>
+  </div>
+  <p>The production answer is "both." Individual agents use MCP to reach their tools; agents use A2A to coordinate with each other. Deploying both is increasingly the expected baseline.</p>
+
+  <h2>3.4 Multi-Agent Architectures</h2>
+  <p>One agent isn't always enough. Reach for multiple when: a single agent has too many tools (past ~15–20 it picks wrong), the work spans distinct skill domains, or separate context windows keep each agent focused.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Pattern</th><th>Shape</th><th>Best for</th></tr>
+    <tr><td><strong>Supervisor</strong></td><td>One router delegates to specialists, synthesizes</td><td>Clear task division (research / write / review)</td></tr>
+    <tr><td><strong>Swarm</strong></td><td>Peer agents hand off control to each other</td><td>Decentralized flows where any agent may take over</td></tr>
+    <tr><td><strong>Hierarchical</strong></td><td>Supervisors of supervisors</td><td>Large systems with team-of-teams structure</td></tr>
+    <tr><td><strong>Pipeline</strong></td><td>Fixed sequence of agents</td><td>Stable, ordered stages</td></tr>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <p class="callout-label">The live debate</p>
+    <p>Multi-agent is not free. Every extra agent adds latency, token cost, and a new failure surface, and shared context gets harder to keep coherent. There's a real industry split — some teams publish multi-agent research systems, others argue "don't build multi-agents" and keep a single strong agent with good tools. The honest answer: single agent until it visibly fails, then the smallest multi-agent topology that fixes the failure. (Deliverable #2 goes deep on this debate.)</p>
+  </div>
+
+  <h2>3.5 Day 3 Build: A Supervisor Multi-Agent System (Your Demo)</h2>
+  <p>A supervisor routing between two specialists. Save as <code>day3_multiagent.py</code> — this is your demo artifact:</p>
+
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">from</span> <span class="var">langchain_openai</span> <span class="kw">import</span> <span class="fn">ChatOpenAI</span>
+<span class="kw">from</span> <span class="var">langgraph.prebuilt</span> <span class="kw">import</span> <span class="fn">create_react_agent</span>
+<span class="kw">from</span> <span class="var">langgraph_supervisor</span> <span class="kw">import</span> <span class="fn">create_supervisor</span>
+
+<span class="fn">load_dotenv</span>()
+<span class="var">model</span> = <span class="fn">ChatOpenAI</span>(<span class="var">model</span>=<span class="str">"gpt-4o-mini"</span>, <span class="var">temperature</span>=<span class="num">0</span>)
+
+<span class="cm"># --- Specialist 1: math ---</span>
+<span class="kw">def</span> <span class="fn">add</span>(<span class="var">a</span>: <span class="var">float</span>, <span class="var">b</span>: <span class="var">float</span>) -> <span class="var">float</span>:
+    <span class="str">"""Add two numbers."""</span>
+    <span class="kw">return</span> <span class="var">a</span> + <span class="var">b</span>
+
+<span class="kw">def</span> <span class="fn">multiply</span>(<span class="var">a</span>: <span class="var">float</span>, <span class="var">b</span>: <span class="var">float</span>) -> <span class="var">float</span>:
+    <span class="str">"""Multiply two numbers."""</span>
+    <span class="kw">return</span> <span class="var">a</span> * <span class="var">b</span>
+
+<span class="var">math_agent</span> = <span class="fn">create_react_agent</span>(
+    <span class="var">model</span>, <span class="var">tools</span>=[<span class="var">add</span>, <span class="var">multiply</span>],
+    <span class="var">name</span>=<span class="str">"math_expert"</span>,
+    <span class="var">prompt</span>=<span class="str">"You are a math expert. Use one tool at a time."</span>
+)
+
+<span class="cm"># --- Specialist 2: research (stub the tool for the demo) ---</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(<span class="var">query</span>: <span class="var">str</span>) -> <span class="var">str</span>:
+    <span class="str">"""Search the web for information."""</span>
+    <span class="kw">return</span> <span class="str">"Lisbon population is about 550,000."</span>
+
+<span class="var">research_agent</span> = <span class="fn">create_react_agent</span>(
+    <span class="var">model</span>, <span class="var">tools</span>=[<span class="var">web_search</span>],
+    <span class="var">name</span>=<span class="str">"research_expert"</span>,
+    <span class="var">prompt</span>=<span class="str">"You are a researcher. Look things up, don't do math."</span>
+)
+
+<span class="cm"># --- Supervisor routes between them ---</span>
+<span class="var">workflow</span> = <span class="fn">create_supervisor</span>(
+    [<span class="var">research_agent</span>, <span class="var">math_agent</span>],
+    <span class="var">model</span>=<span class="var">model</span>,
+    <span class="var">prompt</span>=<span class="str">"You manage a researcher and a math expert. "</span>
+           <span class="str">"Delegate each subtask to the right one."</span>
+)
+<span class="var">app</span> = <span class="var">workflow</span>.<span class="fn">compile</span>()
+
+<span class="var">result</span> = <span class="var">app</span>.<span class="fn">invoke</span>({<span class="str">"messages"</span>: [{
+    <span class="str">"role"</span>: <span class="str">"user"</span>,
+    <span class="str">"content"</span>: <span class="str">"Find Lisbon's population, then multiply it by 3."</span>
+}]})
+
+<span class="kw">for</span> <span class="var">m</span> <span class="kw">in</span> <span class="var">result</span>[<span class="str">"messages"</span>]:
+    <span class="var">m</span>.<span class="fn">pretty_print</span>()  <span class="cm"># shows the routing — keep on for the demo</span></code></pre>
+
+  <div class="callout warn">
+    <p class="callout-label">Demo tip</p>
+    <p><code>pretty_print()</code> shows the supervisor handing the lookup to <code>research_expert</code>, then the multiplication to <code>math_expert</code>, then composing the answer. That hand-off trace is your narrative: "here the supervisor decides who's responsible for each subtask." That's the whole pitch of multi-agent in one screen.</p>
+  </div>
+
+  <h3>Stretch: expose a tool as an MCP server</h3>
+  <p>To make the protocol real, wrap a tool in an MCP server with FastMCP. Save as <code>day3_mcp_server.py</code>:</p>
+  <pre><button class="copy-btn" onclick="copyCode(this)">copy</button><code><span class="kw">from</span> <span class="var">mcp.server.fastmcp</span> <span class="kw">import</span> <span class="fn">FastMCP</span>
+
+<span class="var">mcp</span> = <span class="fn">FastMCP</span>(<span class="str">"weather"</span>)
+
+<span class="cm"># the @tool decorator = a Tool primitive other hosts can call</span>
+<span class="var">@mcp.tool</span>()
+<span class="kw">def</span> <span class="fn">get_weather</span>(<span class="var">city</span>: <span class="var">str</span>) -> <span class="var">str</span>:
+    <span class="str">"""Get current weather for a city."""</span>
+    <span class="kw">return</span> <span class="str">f"{city}: 21C, clear"</span>
+
+<span class="kw">if</span> <span class="var">__name__</span> == <span class="str">"__main__"</span>:
+    <span class="var">mcp</span>.<span class="fn">run</span>()  <span class="cm"># speaks MCP over stdio</span></code></pre>
+  <p>Point any MCP-compatible host (Claude Desktop, Cursor, or a LangGraph MCP client) at this file and <code>get_weather</code> shows up as a tool — no per-host integration code. That's the entire value of the protocol in 12 lines.</p>
+
+  <h2>3.6 What to Say in the Interview</h2>
+
+  <div class="quote-block">
+    <p>"Most things people call agents are really workflows — fixed code paths with LLM calls inside. I reach for a true agent only when the control flow genuinely can't be written ahead of time. Starting simple is a feature, not a compromise."</p>
+    <span class="quote-label">On workflows vs agents</span>
+  </div>
+  <div class="quote-block">
+    <p>"A raw tool loop is fine until you need memory, human approval, or resume-after-crash. LangGraph gives you that by modeling the agent as a graph with checkpointed state — the loop becomes nodes and conditional edges you can inspect and interrupt."</p>
+    <span class="quote-label">On LangGraph</span>
+  </div>
+  <div class="quote-block">
+    <p>"MCP and A2A aren't competitors — they're different layers. MCP is how an agent reaches its tools; A2A is how agents delegate to each other. Production systems run both: A2A for orchestration, MCP for execution. Both are JSON-RPC, both are under the Linux Foundation now."</p>
+    <span class="quote-label">On protocols</span>
+  </div>
+  <div class="quote-block">
+    <p>"Multi-agent buys you focus and separation of concerns, but it costs latency, tokens, and a bigger failure surface. I default to a single strong agent and only split when one agent is visibly drowning — too many tools or genuinely distinct skill domains."</p>
+    <span class="quote-label">On when multi-agent is worth it</span>
+  </div>
+
+  <hr class="divider">
+  <h2>Day 3 Checkpoint</h2>
+  <div class="checklist">
+    <p class="checklist-title">Understand</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">MCP = agent↔tools, A2A = agent↔agents, and why both</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">MCP host/client/server + the 6 primitives</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">A2A Agent Cards and task delegation</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">The 4 multi-agent patterns and the cost of going multi</span></div>
+  </div>
+  <div class="checklist">
+    <p class="checklist-title">Built</p>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">A supervisor system routing across two specialist agents</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Seen the supervisor's hand-off trace</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Exposed a tool as an MCP server</span></div>
+    <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Can walk someone through the demo in 10 minutes</span></div>
+  </div>
+</section>
+
+<!-- QUICK REF -->
+<section class="section" id="quickref">
+  <p class="section-label">Quick Reference</p>
+  <h2>Everything in one place</h2>
+
+  <h3>The progression</h3>
+  <div class="diagram">DAY 1   bare loop      while-true: reason -> act -> observe
+DAY 2   LangGraph      state + nodes + conditional edges + checkpoint
+DAY 3   systems        MCP (tools) + A2A (agents) + supervisor/swarm</div>
+
+  <div class="ref-grid">
+    <div class="ref-card">
+      <h4>Pattern Families</h4>
+      <ul>
+        <li>Workflows: chaining, routing, parallel, orchestrator, evaluator</li>
+        <li>Agentic: reflection, tool use, planning, multi-agent</li>
+        <li>Rule: simplest thing that works</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>LangGraph</h4>
+      <ul>
+        <li>State = shared memory</li>
+        <li>Nodes = work, edges = transitions</li>
+        <li>Conditional edges = the loop</li>
+        <li>Checkpointer = memory + resume + HITL</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>MCP Primitives</h4>
+      <ul>
+        <li>Server: tools, resources, prompts</li>
+        <li>Client: sampling, roots, elicitation</li>
+        <li>Transports: stdio, Streamable HTTP</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>Multi-Agent</h4>
+      <ul>
+        <li>Supervisor (router)</li>
+        <li>Swarm (peer hand-off)</li>
+        <li>Hierarchical (teams of teams)</li>
+        <li>Cost: latency + tokens + failure surface</li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>Suggested Reads</h4>
+      <ul>
+        <li><a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank">Anthropic — Building Effective Agents</a></li>
+        <li><a href="https://langchain-ai.github.io/langgraph/" target="_blank">LangGraph docs</a></li>
+        <li><a href="https://modelcontextprotocol.io" target="_blank">modelcontextprotocol.io</a></li>
+        <li><a href="https://a2a-protocol.org" target="_blank">a2a-protocol.org</a></li>
+      </ul>
+    </div>
+    <div class="ref-card">
+      <h4>MCP vs A2A</h4>
+      <ul>
+        <li>MCP: agent ↔ tools</li>
+        <li>A2A: agent ↔ agents</li>
+        <li>Both JSON-RPC, both Linux Foundation</li>
+        <li>Production: run both</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Agentic Systems Bootcamp — 3 days to a working multi-agent system</span>
+  <span>Stack: Python · LangChain · LangGraph · MCP</span>
+</footer>
+
+<script>
+  function toggleCheck(el) {
+    el.classList.toggle('done');
+  }
+
+  function copyCode(btn) {
+    const pre = btn.parentElement;
+    const code = pre.querySelector('code');
+    const text = code.innerText || code.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animationDelay = '0.05s';
+        e.target.style.animationPlayState = 'running';
+      }
+    });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.section').forEach(s => {
+    s.style.animationPlayState = 'paused';
+    observer.observe(s);
+  });
+</script>
+</body>
+</html>
